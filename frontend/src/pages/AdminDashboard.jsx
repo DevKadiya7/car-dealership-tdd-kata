@@ -7,7 +7,7 @@ const formatCurrency = (value) =>
   Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 export default function AdminDashboard() {
-  const { summary } = useDashboard();
+  const { summary, recentPurchases } = useDashboard();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
@@ -61,6 +61,24 @@ export default function AdminDashboard() {
           <SummaryCard label="Total Customers" value={summary.total_customers} />
           <SummaryCard label="Total Sales" value={summary.total_sales} />
           <SummaryCard label="Total Revenue" value={formatCurrency(summary.total_revenue)} />
+        </div>
+      )}
+
+      {recentPurchases && recentPurchases.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
+            Recent Purchases
+          </h2>
+          <ul className="plate divide-y divide-hairline">
+            {recentPurchases.map((purchase) => (
+              <li key={purchase.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                <span className="font-body text-sm text-ink">
+                  {purchase.vehicle_make} {purchase.vehicle_model}
+                </span>
+                <span className="font-mono text-xs text-muted">{purchase.customer_email}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
