@@ -7,8 +7,17 @@ const formatCurrency = (value) =>
   Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 export default function AdminDashboard() {
-  const { summary, recentPurchases, topSelling, lowStock, salesByCategory, monthlySales } =
-    useDashboard();
+  const {
+    summary,
+    recentPurchases,
+    topSelling,
+    lowStock,
+    salesByCategory,
+    monthlySales,
+    loading: dashboardLoading,
+    error: dashboardError,
+    isEmpty,
+  } = useDashboard();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
@@ -57,13 +66,29 @@ export default function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      {summary && (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <SummaryCard label="Total Customers" value={summary.total_customers} />
-          <SummaryCard label="Total Sales" value={summary.total_sales} />
-          <SummaryCard label="Total Revenue" value={formatCurrency(summary.total_revenue)} />
+      {dashboardLoading ? (
+        <div className="mb-8">
+          <Loader />
         </div>
-      )}
+      ) : dashboardError ? (
+        <div className="plate mb-8 p-6 text-center">
+          <p className="font-mono text-sm text-soldout">
+            Failed to load dashboard analytics. Please try again later.
+          </p>
+        </div>
+      ) : isEmpty ? (
+        <div className="plate mb-8 p-6 text-center">
+          <p className="font-mono text-sm text-muted">No dashboard data available yet.</p>
+        </div>
+      ) : (
+        <>
+          {summary && (
+            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <SummaryCard label="Total Customers" value={summary.total_customers} />
+              <SummaryCard label="Total Sales" value={summary.total_sales} />
+              <SummaryCard label="Total Revenue" value={formatCurrency(summary.total_revenue)} />
+            </div>
+          )}
 
       {recentPurchases && recentPurchases.length > 0 && (
         <div className="mb-8">
@@ -157,6 +182,8 @@ export default function AdminDashboard() {
             ))}
           </ul>
         </div>
+      )}
+        </>
       )}
 
       <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-amber">Back Office</p>
