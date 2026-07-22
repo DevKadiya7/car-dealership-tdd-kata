@@ -33,11 +33,13 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
       </div>
 
       {vehicle.image_url ? (
-        <img
-          src={vehicle.image_url}
-          alt={`${vehicle.make} ${vehicle.model}`}
-          className="h-44 w-full object-cover"
-        />
+        <div className="h-44 w-full overflow-hidden">
+          <img
+            src={vehicle.image_url}
+            alt={`${vehicle.make} ${vehicle.model}`}
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+          />
+        </div>
       ) : (
         <div className="flex h-44 w-full items-center justify-center bg-raised">
           <span className="font-mono text-xs uppercase tracking-wide text-muted">
