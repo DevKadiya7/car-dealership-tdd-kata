@@ -13,6 +13,7 @@ import SearchBar from "../components/SearchBar";
 import VehicleCard from "../components/VehicleCard";
 import VehicleFormModal from "../components/VehicleFormModal";
 import Loader from "../components/Loader";
+import Pagination from "../components/Pagination";
 import { SORT_OPTIONS, sortVehicles } from "../utils/vehicle";
 
 const PAGE_SIZE = 9;
@@ -179,41 +180,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="rounded-sm border border-hairline px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:border-amber hover:text-amber disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => setPage(pageNum)}
-                  aria-current={page === pageNum ? "page" : undefined}
-                  className={`rounded-sm border px-3 py-1.5 font-mono text-xs ${
-                    page === pageNum
-                      ? "border-amber text-amber"
-                      : "border-hairline text-muted hover:text-ink"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-              <button
-                type="button"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-sm border border-hairline px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:border-amber hover:text-amber disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
