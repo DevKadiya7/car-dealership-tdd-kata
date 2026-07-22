@@ -1,25 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
-const CATEGORY_LABELS = {
-  sedan: "Sedan",
-  suv: "SUV",
-  truck: "Truck",
-  coupe: "Coupe",
-  convertible: "Convertible",
-  hatchback: "Hatchback",
-  van: "Van",
-  electric: "Electric",
-};
-
-function formatPrice(price) {
-  return Number(price).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-}
+import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
 
 export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, onEdit, onDelete }) {
   const [busy, setBusy] = useState(false);

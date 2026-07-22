@@ -2,26 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { getVehicle, purchaseVehicle } from "../api/vehicles";
 import Loader from "../components/Loader";
-
-const CATEGORY_LABELS = {
-  sedan: "Sedan",
-  suv: "SUV",
-  truck: "Truck",
-  coupe: "Coupe",
-  convertible: "Convertible",
-  hatchback: "Hatchback",
-  van: "Van",
-  electric: "Electric",
-};
-
-function formatPrice(price) {
-  return Number(price).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-}
+import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
 
 export default function VehicleDetail() {
   const { id } = useParams();
