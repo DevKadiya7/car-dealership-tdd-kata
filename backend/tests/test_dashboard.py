@@ -11,7 +11,17 @@ from app.models.user import User, UserRole
 
 @pytest.fixture()
 def customer_headers(client):
-    client.post("/api/auth/register", json={"email": "customer@example.com", "password": "pass1234"})
+    client.post(
+        "/api/auth/register",
+        json={
+            "email": "customer@example.com",
+            "password": "pass1234",
+            "first_name": "Test",
+            "last_name": "Customer",
+            "mobile_number": "9876543210",
+            "terms_accepted": True,
+        },
+    )
     token = client.post(
         "/api/auth/login", json={"email": "customer@example.com", "password": "pass1234"}
     ).json()["access_token"]
