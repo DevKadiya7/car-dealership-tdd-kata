@@ -35,11 +35,6 @@ export default function Register() {
   const [mobileNumber, setMobileNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [stateValue, setStateValue] = useState("");
-  const [country, setCountry] = useState("");
-  const [postalCode, setPostalCode] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState({});
@@ -76,11 +71,6 @@ export default function Register() {
         email,
         mobile_number: mobileNumber,
         password,
-        address: address || undefined,
-        city: city || undefined,
-        state: stateValue || undefined,
-        country: country || undefined,
-        postal_code: postalCode || undefined,
         terms_accepted: termsAccepted,
       });
       // Registration doesn't return a token, so log in right after
@@ -162,24 +152,6 @@ export default function Register() {
               value={confirmPassword}
               onChange={setConfirmPassword}
               error={fieldErrors.confirmPassword}
-            />
-          </div>
-
-          <Field id="reg-address" label="Address" value={address} onChange={setAddress} optional />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field id="reg-city" label="City" value={city} onChange={setCity} optional />
-            <Field id="reg-state" label="State" value={stateValue} onChange={setStateValue} optional />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field id="reg-country" label="Country" value={country} onChange={setCountry} optional />
-            <Field
-              id="reg-postal-code"
-              label="Postal Code"
-              value={postalCode}
-              onChange={setPostalCode}
-              optional
             />
           </div>
 
