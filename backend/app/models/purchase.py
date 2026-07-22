@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import Column, ForeignKey, Integer, Numeric, DateTime
+from sqlalchemy.orm import relationship
 
 from app.database import Base, GUID
 
@@ -16,3 +17,6 @@ class Purchase(Base):
     quantity = Column(Integer, nullable=False)
     total_price = Column(Numeric(10, 2), nullable=False)
     purchased_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User")
+    vehicle = relationship("Vehicle")

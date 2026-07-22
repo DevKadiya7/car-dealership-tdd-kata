@@ -11,11 +11,11 @@ class DashboardRepository:
         self.db = db
 
     def get_summary(self):
-        total_users = self.db.query(func.count(User.id)).scalar()
-        total_vehicles = self.db.query(func.count(Vehicle.id)).scalar()
-        total_stock = self.db.query(func.coalesce(func.sum(Vehicle.quantity), 0)).scalar()
-        total_purchases = self.db.query(func.count(Purchase.id)).scalar()
-        total_revenue = self.db.query(func.coalesce(func.sum(Purchase.total_price), 0)).scalar()
+        total_users = self.db.query(func.count(User.id)).scalar() or 0
+        total_vehicles = self.db.query(func.count(Vehicle.id)).scalar() or 0
+        total_stock = self.db.query(func.coalesce(func.sum(Vehicle.quantity), 0)).scalar() or 0
+        total_purchases = self.db.query(func.count(Purchase.id)).scalar() or 0
+        total_revenue = self.db.query(func.coalesce(func.sum(Purchase.total_price), 0)).scalar() or 0
 
         return {
             "total_users": total_users,
@@ -26,12 +26,24 @@ class DashboardRepository:
         }
 
     def get_recent_purchases(self):
-        return (
+        purchases = (
             self.db.query(Purchase)
             .order_by(Purchase.purchased_at.desc())
             .limit(10)
             .all()
         )
+
+        return [
+            {
+                "id": purchase.id,
+                "vehicle": purchase.vehicle,
+                "buyer_email": purchase.user.email,
+                "quantity": purchase.quantity,
+                "price": purchase.total_price,
+                "purchase_date": purchase.purchased_at,
+            }
+            for purchase in purchases
+        ]
 
     def get_low_stock(self):
         return (
@@ -42,7 +54,7 @@ class DashboardRepository:
         )
 
     def get_top_selling(self):
-        return (
+        rows = (
             self.db.query(
                 Vehicle,
                 func.sum(Purchase.quantity).label("total_sold"),
@@ -53,3 +65,12 @@ class DashboardRepository:
             .order_by(func.sum(Purchase.total_price).desc())
             .all()
         )
+
+        return [
+            {
+                "vehicle": row[0],
+                "total_sold": int(row[1]),
+                "total_revenue": row[2],
+            }
+            for row in rows
+        ]

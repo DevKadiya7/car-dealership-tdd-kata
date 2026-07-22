@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.routers import auth, vehicles, purchase
+from app.routers.dashboard import router as dashboard_router
 
 # Create tables on startup. In a real deployment this is normally replaced
 # by running Alembic migrations instead, but this keeps local setup simple.
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(vehicles.router)
 app.include_router(purchase.router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")
