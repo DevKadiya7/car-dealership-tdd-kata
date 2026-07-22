@@ -7,7 +7,7 @@ const formatCurrency = (value) =>
   Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 export default function AdminDashboard() {
-  const { summary, recentPurchases } = useDashboard();
+  const { summary, recentPurchases, topSelling } = useDashboard();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
@@ -76,6 +76,27 @@ export default function AdminDashboard() {
                   {purchase.vehicle_make} {purchase.vehicle_model}
                 </span>
                 <span className="font-mono text-xs text-muted">{purchase.customer_email}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {topSelling && topSelling.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
+            Top Selling Vehicles
+          </h2>
+          <ul className="plate divide-y divide-hairline">
+            {topSelling.map((vehicle) => (
+              <li
+                key={vehicle.vehicle_id}
+                className="flex items-center justify-between gap-4 px-5 py-3"
+              >
+                <span className="font-body text-sm text-ink">
+                  {vehicle.make} {vehicle.model}
+                </span>
+                <span className="font-mono text-xs text-muted">{vehicle.units_sold} sold</span>
               </li>
             ))}
           </ul>
