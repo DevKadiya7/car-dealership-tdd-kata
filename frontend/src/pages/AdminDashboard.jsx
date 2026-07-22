@@ -90,99 +90,71 @@ export default function AdminDashboard() {
             </div>
           )}
 
-      {recentPurchases && recentPurchases.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
-            Recent Purchases
-          </h2>
-          <ul className="plate divide-y divide-hairline">
-            {recentPurchases.map((purchase) => (
-              <li key={purchase.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                <span className="font-body text-sm text-ink">
-                  {purchase.vehicle_make} {purchase.vehicle_model}
-                </span>
-                <span className="font-mono text-xs text-muted">{purchase.customer_email}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {recentPurchases && recentPurchases.length > 0 && (
+            <DashboardSection title="Recent Purchases">
+              {recentPurchases.map((purchase) => (
+                <li key={purchase.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="font-body text-sm text-ink">
+                    {purchase.vehicle_make} {purchase.vehicle_model}
+                  </span>
+                  <span className="font-mono text-xs text-muted">{purchase.customer_email}</span>
+                </li>
+              ))}
+            </DashboardSection>
+          )}
 
-      {topSelling && topSelling.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
-            Top Selling Vehicles
-          </h2>
-          <ul className="plate divide-y divide-hairline">
-            {topSelling.map((vehicle) => (
-              <li
-                key={vehicle.vehicle_id}
-                className="flex items-center justify-between gap-4 px-5 py-3"
-              >
-                <span className="font-body text-sm text-ink">
-                  {vehicle.make} {vehicle.model}
-                </span>
-                <span className="font-mono text-xs text-muted">{vehicle.units_sold} sold</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {topSelling && topSelling.length > 0 && (
+            <DashboardSection title="Top Selling Vehicles">
+              {topSelling.map((vehicle) => (
+                <li
+                  key={vehicle.vehicle_id}
+                  className="flex items-center justify-between gap-4 px-5 py-3"
+                >
+                  <span className="font-body text-sm text-ink">
+                    {vehicle.make} {vehicle.model}
+                  </span>
+                  <span className="font-mono text-xs text-muted">{vehicle.units_sold} sold</span>
+                </li>
+              ))}
+            </DashboardSection>
+          )}
 
-      {lowStock && lowStock.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
-            Low Stock Vehicles
-          </h2>
-          <ul className="plate divide-y divide-hairline">
-            {lowStock.map((vehicle) => (
-              <li key={vehicle.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                <span className="font-body text-sm text-ink">
-                  {vehicle.make} {vehicle.model}
-                </span>
-                <span className="font-mono text-xs text-muted">{vehicle.quantity} left</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {lowStock && lowStock.length > 0 && (
+            <DashboardSection title="Low Stock Vehicles">
+              {lowStock.map((vehicle) => (
+                <li key={vehicle.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="font-body text-sm text-ink">
+                    {vehicle.make} {vehicle.model}
+                  </span>
+                  <span className="font-mono text-xs text-muted">{vehicle.quantity} left</span>
+                </li>
+              ))}
+            </DashboardSection>
+          )}
 
-      {salesByCategory && salesByCategory.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
-            Sales by Category
-          </h2>
-          <ul className="plate divide-y divide-hairline">
-            {salesByCategory.map((row) => (
-              <li
-                key={row.category}
-                className="flex items-center justify-between gap-4 px-5 py-3"
-              >
-                <span className="font-body text-sm capitalize text-ink">{row.category}</span>
-                <span className="font-mono text-xs text-muted">{row.units_sold} sold</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {salesByCategory && salesByCategory.length > 0 && (
+            <DashboardSection title="Sales by Category">
+              {salesByCategory.map((row) => (
+                <li key={row.category} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="font-body text-sm capitalize text-ink">{row.category}</span>
+                  <span className="font-mono text-xs text-muted">{row.units_sold} sold</span>
+                </li>
+              ))}
+            </DashboardSection>
+          )}
 
-      {monthlySales && monthlySales.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
-            Monthly Sales
-          </h2>
-          <ul className="plate divide-y divide-hairline">
-            {monthlySales.map((row) => (
-              <li key={row.month} className="flex items-center justify-between gap-4 px-5 py-3">
-                <span className="font-body text-sm text-ink">{row.month}</span>
-                <span className="font-mono text-xs text-muted">
-                  {row.total_purchases} purchases
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {monthlySales && monthlySales.length > 0 && (
+            <DashboardSection title="Monthly Sales">
+              {monthlySales.map((row) => (
+                <li key={row.month} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="font-body text-sm text-ink">{row.month}</span>
+                  <span className="font-mono text-xs text-muted">
+                    {row.total_purchases} purchases
+                  </span>
+                </li>
+              ))}
+            </DashboardSection>
+          )}
         </>
       )}
 
@@ -246,6 +218,17 @@ function SummaryCard({ label, value }) {
     <div className="plate px-5 py-4">
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
       <p className="mt-1 font-mono text-2xl font-semibold text-ink">{value}</p>
+    </div>
+  );
+}
+
+function DashboardSection({ title, children }) {
+  return (
+    <div className="mb-8">
+      <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
+        {title}
+      </h2>
+      <ul className="plate divide-y divide-hairline">{children}</ul>
     </div>
   );
 }
