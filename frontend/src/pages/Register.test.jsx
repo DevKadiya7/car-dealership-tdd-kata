@@ -57,12 +57,12 @@ describe("Register page", () => {
     expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^city/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^state/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^country/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /terms/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^address/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^city/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^state/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^country/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/postal code/i)).not.toBeInTheDocument();
   });
 
   it("shows an error when first name is missing", async () => {
@@ -136,11 +136,6 @@ describe("Register page", () => {
 
     renderRegister();
     await fillRequiredFields();
-    await userEvent.type(screen.getByLabelText(/^address/i), "221B Baker Street");
-    await userEvent.type(screen.getByLabelText(/^city/i), "London");
-    await userEvent.type(screen.getByLabelText(/^state/i), "Greater London");
-    await userEvent.type(screen.getByLabelText(/^country/i), "UK");
-    await userEvent.type(screen.getByLabelText(/postal code/i), "NW16XE");
     await userEvent.click(screen.getByRole("checkbox", { name: /terms/i }));
     await userEvent.click(screen.getByRole("button", { name: /create account/i }));
 
@@ -150,11 +145,6 @@ describe("Register page", () => {
       email: "jane.doe@example.com",
       mobile_number: "9876543210",
       password: "Passw0rd!",
-      address: "221B Baker Street",
-      city: "London",
-      state: "Greater London",
-      country: "UK",
-      postal_code: "NW16XE",
       terms_accepted: true,
     });
     expect(mockLogin).toHaveBeenCalledWith("jane.doe@example.com", "Passw0rd!");
