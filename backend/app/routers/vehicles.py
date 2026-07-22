@@ -1,33 +1,106 @@
+"""Vehicle & inventory endpoints, all protected by JWT auth."""
+import uuid
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.schemas.vehicle import VehicleCreate, VehicleRead
-from app.services.vehicle_service import create_vehicle, get_vehicle, list_vehicles
 
-router = APIRouter(prefix="/vehicles", tags=["vehicles"])
+from app.auth.dependencies import get_current_user, require_admin
+from app.database import get_db
+from app.repositories.purchase_repository import PurchaseRepository
+from app.repositories.vehicle_repository import VehicleRepository
+from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
+from app.services.purchase_service import PurchaseService
+from app.services.vehicle_service import VehicleService
+from app.utils.exceptions import InsufficientStockError, VehicleNotFoundError
+
+router = APIRouter(prefix="/api/vehicles", tags=["vehicles"])
 
 
-def get_db():
-    db = SessionLocal()
+def get_vehicle_service(db: Session = Depends(get_db)) -> VehicleService:
+    return VehicleService(VehicleRepository(db))
+
+
+def get_purchase_service(db: Session = Depends(get_db)) -> PurchaseService:
+    return PurchaseService(PurchaseRepository(db), VehicleRepository(db))
+
+
+@router.post("", response_model=VehicleOut, status_code=status.HTTP_201_CREATED)
+def add_vehicle(
+    payload: VehicleCreate,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(get_current_user),
+):
+    return vehicle_service.create_vehicle(**payload.model_dump())
+
+
+@router.get("", response_model=list[VehicleOut])
+def list_vehicles(
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(get_current_user),
+):
+    return vehicle_service.list_vehicles()
+
+
+@router.get("/search", response_model=list[VehicleOut])
+def search_vehicles(
+    make: str | None = None,
+    model: str | None = None,
+    category: str | None = None,
+    min_price: Decimal | None = None,
+    max_price: Decimal | None = None,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(get_current_user),
+):
+    return vehicle_service.search_vehicles(make, model, category, min_price, max_price)
+
+
+@router.put("/{vehicle_id}", response_model=VehicleOut)
+def update_vehicle(
+    vehicle_id: uuid.UUID,
+    payload: VehicleUpdate,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(get_current_user),
+):
     try:
-        yield db
-    finally:
-        db.close()
+        return vehicle_service.update_vehicle(vehicle_id, **payload.model_dump(exclude_unset=True))
+    except VehicleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
-@router.post("/", response_model=VehicleRead, status_code=status.HTTP_201_CREATED)
-def create_vehicle_route(vehicle: VehicleCreate, db: Session = Depends(get_db)):
-    return create_vehicle(db, vehicle)
+@router.delete("/{vehicle_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_vehicle(
+    vehicle_id: uuid.UUID,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(require_admin),
+):
+    try:
+        vehicle_service.delete_vehicle(vehicle_id)
+    except VehicleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
-@router.get("/", response_model=list[VehicleRead])
-def list_vehicles_route(db: Session = Depends(get_db)):
-    return list_vehicles(db)
+@router.post("/{vehicle_id}/purchase", response_model=VehicleOut)
+def purchase_vehicle(
+    vehicle_id: uuid.UUID,
+    purchase_service: PurchaseService = Depends(get_purchase_service),
+    current_user=Depends(get_current_user),
+):
+    try:
+        return purchase_service.purchase_vehicle(current_user.id, vehicle_id)
+    except VehicleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except InsufficientStockError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
-@router.get("/{vehicle_id}", response_model=VehicleRead)
-def get_vehicle_route(vehicle_id: int, db: Session = Depends(get_db)):
-    vehicle = get_vehicle(db, vehicle_id)
-    if vehicle is None:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    return vehicle
+@router.post("/{vehicle_id}/restock", response_model=VehicleOut)
+def restock_vehicle(
+    vehicle_id: uuid.UUID,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(require_admin),
+):
+    try:
+        return vehicle_service.restock_vehicle(vehicle_id)
+    except VehicleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
