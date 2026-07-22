@@ -1,4 +1,5 @@
 """Repository layer for admin dashboard analytics."""
+import calendar
 from collections import defaultdict
 from decimal import Decimal
 from sqlalchemy import func
@@ -13,18 +14,20 @@ class DashboardRepository:
         self.db = db
 
     def get_summary(self):
-        total_users = self.db.query(func.count(User.id)).scalar() or 0
+        total_customers = self.db.query(func.count(User.id)).scalar() or 0
         total_vehicles = self.db.query(func.count(Vehicle.id)).scalar() or 0
         total_stock = self.db.query(func.coalesce(func.sum(Vehicle.quantity), 0)).scalar() or 0
-        total_purchases = self.db.query(func.count(Purchase.id)).scalar() or 0
+        total_sales = self.db.query(func.count(Purchase.id)).scalar() or 0
         total_revenue = self.db.query(func.coalesce(func.sum(Purchase.total_price), Decimal("0.00"))).scalar() or Decimal("0.00")
+        low_stock_count = self.db.query(func.count(Vehicle.id)).filter(Vehicle.quantity <= 5).scalar() or 0
 
         return {
-            "total_users": total_users,
+            "total_customers": total_customers,
             "total_vehicles": total_vehicles,
             "total_stock": total_stock,
-            "total_purchases": total_purchases,
+            "total_sales": total_sales,
             "total_revenue": total_revenue,
+            "low_stock_count": low_stock_count,
         }
 
     def get_recent_purchases(self):
@@ -38,8 +41,10 @@ class DashboardRepository:
         return [
             {
                 "id": purchase.id,
-                "vehicle": purchase.vehicle,
-                "buyer_email": purchase.user.email,
+                "vehicle_id": purchase.vehicle.id,
+                "vehicle_make": purchase.vehicle.make,
+                "vehicle_model": purchase.vehicle.model,
+                "customer_email": purchase.user.email,
                 "quantity": purchase.quantity,
                 "price": purchase.total_price,
                 "purchase_date": purchase.purchased_at,
@@ -70,9 +75,11 @@ class DashboardRepository:
 
         return [
             {
-                "vehicle": row[0],
-                "total_sold": int(row[1]),
-                "total_revenue": row[2],
+                "vehicle_id": row[0].id,
+                "make": row[0].make,
+                "model": row[0].model,
+                "units_sold": int(row[1]),
+                "revenue": row[2],
             }
             for row in rows
         ]
@@ -93,25 +100,25 @@ class DashboardRepository:
             {
                 "category": row[0],
                 "units_sold": int(row[1]),
-                "total_revenue": row[2],
+                "revenue": row[2],
             }
             for row in rows
         ]
 
     def get_monthly_sales(self):
         purchases = self.db.query(Purchase).all()
-        grouped = defaultdict(lambda: {"units_sold": 0, "total_revenue": Decimal("0.00")})
+        grouped = defaultdict(lambda: {"total_purchases": 0, "revenue": Decimal("0.00")})
 
         for purchase in purchases:
-            month = purchase.purchased_at.strftime("%Y-%m")
-            grouped[month]["units_sold"] += purchase.quantity
-            grouped[month]["total_revenue"] += purchase.total_price
+            month_index = purchase.purchased_at.month
+            grouped[month_index]["total_purchases"] += purchase.quantity
+            grouped[month_index]["revenue"] += purchase.total_price
 
         return [
             {
-                "month": month,
-                "total_purchases": stats["units_sold"],
-                "total_revenue": stats["total_revenue"],
+                "month": calendar.month_name[month_index],
+                "revenue": grouped[month_index]["revenue"],
+                "total_purchases": grouped[month_index]["total_purchases"],
             }
-            for month, stats in sorted(grouped.items())
+            for month_index in range(1, 13)
         ]

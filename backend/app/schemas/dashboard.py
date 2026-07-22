@@ -5,23 +5,24 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
-from app.schemas.vehicle import VehicleOut
-
 
 class DashboardSummary(BaseModel):
-    total_users: int
+    total_customers: int
     total_vehicles: int
     total_stock: int
-    total_purchases: int
+    total_sales: int
     total_revenue: Decimal
+    low_stock_count: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RecentPurchaseOut(BaseModel):
     id: uuid.UUID
-    vehicle: VehicleOut
-    buyer_email: str
+    vehicle_id: uuid.UUID
+    vehicle_make: str
+    vehicle_model: str
+    customer_email: str
     quantity: int
     price: Decimal
     purchase_date: datetime
@@ -30,8 +31,26 @@ class RecentPurchaseOut(BaseModel):
 
 
 class TopSellingVehicleOut(BaseModel):
-    vehicle: VehicleOut
-    total_sold: int
-    total_revenue: Decimal
+    vehicle_id: uuid.UUID
+    make: str
+    model: str
+    units_sold: int
+    revenue: Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SalesByCategoryOut(BaseModel):
+    category: str
+    units_sold: int
+    revenue: Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MonthlySalesOut(BaseModel):
+    month: str
+    revenue: Decimal
+    total_purchases: int
 
     model_config = ConfigDict(from_attributes=True)
