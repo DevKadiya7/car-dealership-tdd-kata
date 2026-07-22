@@ -22,8 +22,20 @@ class PurchaseRepository:
         self.db.refresh(purchase)
         return purchase
 
+    def _serialize(self, purchase: Purchase) -> dict:
+        return {
+            "id": purchase.id,
+            "user_id": purchase.user_id,
+            "vehicle_id": purchase.vehicle_id,
+            "quantity": purchase.quantity,
+            "total_price": purchase.total_price,
+            "purchased_at": purchase.purchased_at,
+        }
+
     def list_by_user(self, user_id: uuid.UUID):
-        return self.db.query(Purchase).filter(Purchase.user_id == user_id).all()
+        purchases = self.db.query(Purchase).filter(Purchase.user_id == user_id).all()
+        return [self._serialize(purchase) for purchase in purchases]
 
     def list_all(self):
-        return self.db.query(Purchase).all()
+        purchases = self.db.query(Purchase).all()
+        return [self._serialize(purchase) for purchase in purchases]
