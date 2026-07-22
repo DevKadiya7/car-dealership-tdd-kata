@@ -1,4 +1,6 @@
 """Repository layer for admin dashboard analytics."""
+from collections import defaultdict
+from decimal import Decimal
 from sqlalchemy import func
 
 from app.models.purchase import Purchase
@@ -15,7 +17,7 @@ class DashboardRepository:
         total_vehicles = self.db.query(func.count(Vehicle.id)).scalar() or 0
         total_stock = self.db.query(func.coalesce(func.sum(Vehicle.quantity), 0)).scalar() or 0
         total_purchases = self.db.query(func.count(Purchase.id)).scalar() or 0
-        total_revenue = self.db.query(func.coalesce(func.sum(Purchase.total_price), 0)).scalar() or 0
+        total_revenue = self.db.query(func.coalesce(func.sum(Purchase.total_price), Decimal("0.00"))).scalar() or Decimal("0.00")
 
         return {
             "total_users": total_users,
@@ -73,4 +75,43 @@ class DashboardRepository:
                 "total_revenue": row[2],
             }
             for row in rows
+        ]
+
+    def get_sales_by_category(self):
+        rows = (
+            self.db.query(
+                Vehicle.category,
+                func.sum(Purchase.quantity).label("units_sold"),
+                func.sum(Purchase.total_price).label("total_revenue"),
+            )
+            .join(Purchase, Purchase.vehicle_id == Vehicle.id)
+            .group_by(Vehicle.category)
+            .all()
+        )
+
+        return [
+            {
+                "category": row[0],
+                "units_sold": int(row[1]),
+                "total_revenue": row[2],
+            }
+            for row in rows
+        ]
+
+    def get_monthly_sales(self):
+        purchases = self.db.query(Purchase).all()
+        grouped = defaultdict(lambda: {"units_sold": 0, "total_revenue": Decimal("0.00")})
+
+        for purchase in purchases:
+            month = purchase.purchased_at.strftime("%Y-%m")
+            grouped[month]["units_sold"] += purchase.quantity
+            grouped[month]["total_revenue"] += purchase.total_price
+
+        return [
+            {
+                "month": month,
+                "total_purchases": stats["units_sold"],
+                "total_revenue": stats["total_revenue"],
+            }
+            for month, stats in sorted(grouped.items())
         ]
