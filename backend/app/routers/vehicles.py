@@ -55,6 +55,18 @@ def search_vehicles(
     return vehicle_service.search_vehicles(make, model, category, min_price, max_price)
 
 
+@router.get("/{vehicle_id}", response_model=VehicleOut)
+def get_vehicle(
+    vehicle_id: uuid.UUID,
+    vehicle_service: VehicleService = Depends(get_vehicle_service),
+    current_user=Depends(get_current_user),
+):
+    try:
+        return vehicle_service.get_vehicle(vehicle_id)
+    except VehicleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
 @router.put("/{vehicle_id}", response_model=VehicleOut)
 def update_vehicle(
     vehicle_id: uuid.UUID,
