@@ -120,3 +120,50 @@ def test_delete_vehicle_as_non_admin_returns_403(client, auth_headers):
     response = client.delete(f"/api/vehicles/{created['id']}", headers=auth_headers)
 
     assert response.status_code == 403
+
+
+# --- Phase 4: vehicle images and single-vehicle lookup --------------------
+
+
+def test_add_vehicle_with_image_url_returns_it(client, auth_headers):
+    response = _create_vehicle(client, auth_headers, image_url="https://example.com/corolla.jpg")
+
+    assert response.status_code == 201
+    assert response.json()["image_url"] == "https://example.com/corolla.jpg"
+
+
+def test_add_vehicle_without_image_url_defaults_to_none(client, auth_headers):
+    response = _create_vehicle(client, auth_headers)
+
+    assert response.status_code == 201
+    assert response.json()["image_url"] is None
+
+
+def test_get_vehicle_by_id_returns_vehicle(client, auth_headers):
+    created = _create_vehicle(client, auth_headers, make="Mazda", model="CX-5").json()
+
+    response = client.get(f"/api/vehicles/{created['id']}", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.json()["make"] == "Mazda"
+
+
+def test_get_vehicle_by_id_returns_404_when_not_found(client, auth_headers):
+    response = client.get(
+        "/api/vehicles/00000000-0000-0000-0000-000000000000", headers=auth_headers
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_vehicle_image_url(client, auth_headers):
+    created = _create_vehicle(client, auth_headers).json()
+
+    response = client.put(
+        f"/api/vehicles/{created['id']}",
+        json={"image_url": "https://example.com/updated.jpg"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["image_url"] == "https://example.com/updated.jpg"
