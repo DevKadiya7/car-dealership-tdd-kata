@@ -2,11 +2,18 @@ import { render, screen } from "@testing-library/react";
 import App from "./App";
 import { listVehicles } from "./api/vehicles";
 
-vi.mock("./api/vehicles", () => ({
-  listVehicles: vi.fn(),
-  restockVehicle: vi.fn(),
-  deleteVehicle: vi.fn(),
-}));
+vi.mock("./api/vehicles", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    listVehicles: vi.fn(),
+    searchVehicles: vi.fn(),
+    addVehicle: vi.fn(),
+    updateVehicle: vi.fn(),
+    restockVehicle: vi.fn(),
+    deleteVehicle: vi.fn(),
+  };
+});
 
 describe("App routing", () => {
   it("renders the admin dashboard route for admin users", async () => {
@@ -30,6 +37,6 @@ describe("App routing", () => {
 
     render(<App />);
 
-    expect(await screen.findByText(/Needs Attention/i)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Vehicle Management/i })).toBeInTheDocument();
   });
 });
