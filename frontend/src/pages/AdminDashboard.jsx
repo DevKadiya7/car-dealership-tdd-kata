@@ -7,7 +7,8 @@ const formatCurrency = (value) =>
   Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 export default function AdminDashboard() {
-  const { summary, recentPurchases, topSelling, lowStock, salesByCategory } = useDashboard();
+  const { summary, recentPurchases, topSelling, lowStock, salesByCategory, monthlySales } =
+    useDashboard();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
@@ -134,6 +135,24 @@ export default function AdminDashboard() {
               >
                 <span className="font-body text-sm capitalize text-ink">{row.category}</span>
                 <span className="font-mono text-xs text-muted">{row.units_sold} sold</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {monthlySales && monthlySales.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
+            Monthly Sales
+          </h2>
+          <ul className="plate divide-y divide-hairline">
+            {monthlySales.map((row) => (
+              <li key={row.month} className="flex items-center justify-between gap-4 px-5 py-3">
+                <span className="font-body text-sm text-ink">{row.month}</span>
+                <span className="font-mono text-xs text-muted">
+                  {row.total_purchases} purchases
+                </span>
               </li>
             ))}
           </ul>
