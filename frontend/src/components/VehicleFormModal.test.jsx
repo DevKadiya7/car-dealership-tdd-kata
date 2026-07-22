@@ -36,4 +36,62 @@ describe("VehicleFormModal", () => {
 
     expect(screen.getByLabelText(/image url/i)).toHaveValue("https://example.com/corolla.jpg");
   });
+
+  it("shows a live image preview when an image URL is entered", async () => {
+    render(<VehicleFormModal vehicle={null} onSave={() => {}} onClose={() => {}} />);
+
+    expect(screen.queryByAltText(/image preview/i)).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/image url/i), "https://example.com/corolla.jpg");
+
+    expect(screen.getByAltText(/image preview/i)).toHaveAttribute(
+      "src",
+      "https://example.com/corolla.jpg"
+    );
+  });
+
+  it("shows a broken-image message when the preview fails to load", async () => {
+    render(<VehicleFormModal vehicle={null} onSave={() => {}} onClose={() => {}} />);
+
+    await userEvent.type(screen.getByLabelText(/image url/i), "https://example.com/broken.jpg");
+    const preview = screen.getByAltText(/image preview/i);
+    preview.dispatchEvent(new Event("error"));
+
+    expect(await screen.findByText(/couldn't load that image/i)).toBeInTheDocument();
+  });
+
+  it("shows required indicators next to required fields", () => {
+    render(<VehicleFormModal vehicle={null} onSave={() => {}} onClose={() => {}} />);
+
+    const makeLabel = screen.getByText(/^make/i);
+    expect(makeLabel.textContent).toMatch(/\*/);
+  });
+
+  it("shows a validation error when price is not greater than zero", async () => {
+    const onSave = vi.fn();
+    render(<VehicleFormModal vehicle={null} onSave={onSave} onClose={() => {}} />);
+
+    await userEvent.type(screen.getByLabelText(/make/i), "Toyota");
+    await userEvent.type(screen.getByLabelText(/model/i), "Corolla");
+    await userEvent.type(screen.getByLabelText(/price/i), "0");
+    await userEvent.type(screen.getByLabelText(/quantity/i), "5");
+    await userEvent.click(screen.getByRole("button", { name: /add vehicle/i }));
+
+    expect(await screen.findByText(/price must be greater than zero/i)).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("shows a validation error when quantity is negative", async () => {
+    const onSave = vi.fn();
+    render(<VehicleFormModal vehicle={null} onSave={onSave} onClose={() => {}} />);
+
+    await userEvent.type(screen.getByLabelText(/make/i), "Toyota");
+    await userEvent.type(screen.getByLabelText(/model/i), "Corolla");
+    await userEvent.type(screen.getByLabelText(/price/i), "22000");
+    await userEvent.type(screen.getByLabelText(/quantity/i), "-1");
+    await userEvent.click(screen.getByRole("button", { name: /add vehicle/i }));
+
+    expect(await screen.findByText(/quantity cannot be negative/i)).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });
