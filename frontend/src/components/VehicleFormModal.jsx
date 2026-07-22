@@ -5,6 +5,8 @@ const blankForm = { make: "", model: "", category: "sedan", price: "", quantity:
 
 export default function VehicleFormModal({ vehicle, onSave, onClose }) {
   const [form, setForm] = useState(blankForm);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [imageError, setImageError] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const isEditing = Boolean(vehicle);
@@ -24,13 +26,33 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
     }
   }, [vehicle]);
 
+  useEffect(() => {
+    setImageError(false);
+  }, [form.image_url]);
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const validate = () => {
+    const errors = {};
+    if (!form.make.trim()) errors.make = "Make is required.";
+    if (!form.model.trim()) errors.model = "Model is required.";
+    if (!(Number(form.price) > 0)) errors.price = "Price must be greater than zero.";
+    if (form.quantity === "" || Number(form.quantity) < 0) {
+      errors.quantity = "Quantity cannot be negative.";
+    }
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSaving(true);
     try {
       await onSave({
@@ -64,45 +86,49 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div>
             <label
               htmlFor="vehicle-make"
               className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
             >
-              Make
+              Make<span className="text-soldout"> *</span>
             </label>
             <input
               id="vehicle-make"
               name="make"
               value={form.make}
               onChange={handleChange}
-              required
               className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
             />
+            {fieldErrors.make && (
+              <p className="mt-1 font-mono text-xs text-soldout">{fieldErrors.make}</p>
+            )}
           </div>
           <div>
             <label
               htmlFor="vehicle-model"
               className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
             >
-              Model
+              Model<span className="text-soldout"> *</span>
             </label>
             <input
               id="vehicle-model"
               name="model"
               value={form.model}
               onChange={handleChange}
-              required
               className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
             />
+            {fieldErrors.model && (
+              <p className="mt-1 font-mono text-xs text-soldout">{fieldErrors.model}</p>
+            )}
           </div>
           <div>
             <label
               htmlFor="vehicle-category"
               className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
             >
-              Category
+              Category<span className="text-soldout"> *</span>
             </label>
             <select
               id="vehicle-category"
@@ -124,7 +150,7 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
                 htmlFor="vehicle-price"
                 className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
               >
-                Price (USD)
+                Price (USD)<span className="text-soldout"> *</span>
               </label>
               <input
                 id="vehicle-price"
@@ -134,16 +160,18 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
                 type="number"
                 min="0.01"
                 step="0.01"
-                required
                 className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
               />
+              {fieldErrors.price && (
+                <p className="mt-1 font-mono text-xs text-soldout">{fieldErrors.price}</p>
+              )}
             </div>
             <div>
               <label
                 htmlFor="vehicle-quantity"
                 className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
               >
-                Quantity
+                Quantity<span className="text-soldout"> *</span>
               </label>
               <input
                 id="vehicle-quantity"
@@ -153,9 +181,11 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
                 type="number"
                 min="0"
                 step="1"
-                required
                 className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
               />
+              {fieldErrors.quantity && (
+                <p className="mt-1 font-mono text-xs text-soldout">{fieldErrors.quantity}</p>
+              )}
             </div>
           </div>
           <div>
@@ -175,6 +205,22 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
               placeholder="https://example.com/car.jpg"
               className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
             />
+            <p className="mt-1 font-mono text-[11px] text-muted/70">
+              Paste a direct link to an image. Leave blank to show the fallback placeholder.
+            </p>
+            {form.image_url &&
+              (imageError ? (
+                <p className="mt-2 font-mono text-xs text-soldout">
+                  Couldn't load that image. Check the URL.
+                </p>
+              ) : (
+                <img
+                  src={form.image_url}
+                  alt="Image preview"
+                  onError={() => setImageError(true)}
+                  className="mt-2 h-32 w-full rounded-sm object-cover"
+                />
+              ))}
           </div>
 
           {error && <p className="font-mono text-xs text-soldout">{error}</p>}
