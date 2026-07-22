@@ -90,71 +90,120 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {recentPurchases && recentPurchases.length > 0 && (
-            <DashboardSection title="Recent Purchases">
-              {recentPurchases.map((purchase) => (
-                <li key={purchase.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="font-body text-sm text-ink">
-                    {purchase.vehicle_make} {purchase.vehicle_model}
-                  </span>
-                  <span className="font-mono text-xs text-muted">{purchase.customer_email}</span>
-                </li>
-              ))}
-            </DashboardSection>
-          )}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {recentPurchases && recentPurchases.length > 0 && (
+              <DashboardSection title="Recent Purchases">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-hairline">
+                      <Th>Vehicle</Th>
+                      <Th>Customer</Th>
+                      <Th align="right">Price</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {recentPurchases.map((purchase) => (
+                      <tr key={purchase.id}>
+                        <Td>
+                          {purchase.vehicle_make} {purchase.vehicle_model}
+                        </Td>
+                        <Td muted>{purchase.customer_email}</Td>
+                        <Td align="right">{formatCurrency(purchase.price)}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </DashboardSection>
+            )}
 
-          {topSelling && topSelling.length > 0 && (
-            <DashboardSection title="Top Selling Vehicles">
-              {topSelling.map((vehicle) => (
-                <li
-                  key={vehicle.vehicle_id}
-                  className="flex items-center justify-between gap-4 px-5 py-3"
-                >
-                  <span className="font-body text-sm text-ink">
-                    {vehicle.make} {vehicle.model}
-                  </span>
-                  <span className="font-mono text-xs text-muted">{vehicle.units_sold} sold</span>
-                </li>
-              ))}
-            </DashboardSection>
-          )}
+            {topSelling && topSelling.length > 0 && (
+              <DashboardSection title="Top Selling Vehicles">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-hairline">
+                      <Th>Vehicle</Th>
+                      <Th align="right">Units Sold</Th>
+                      <Th align="right">Revenue</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {topSelling.map((vehicle) => (
+                      <tr key={vehicle.vehicle_id}>
+                        <Td>
+                          {vehicle.make} {vehicle.model}
+                        </Td>
+                        <Td align="right">{vehicle.units_sold}</Td>
+                        <Td align="right">{formatCurrency(vehicle.revenue)}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </DashboardSection>
+            )}
+          </div>
 
           {lowStock && lowStock.length > 0 && (
             <DashboardSection title="Low Stock Vehicles">
-              {lowStock.map((vehicle) => (
-                <li key={vehicle.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="font-body text-sm text-ink">
-                    {vehicle.make} {vehicle.model}
-                  </span>
-                  <span className="font-mono text-xs text-muted">{vehicle.quantity} left</span>
-                </li>
-              ))}
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-hairline">
+                    <Th>Vehicle</Th>
+                    <Th align="right">Stock Left</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-hairline">
+                  {lowStock.map((vehicle) => (
+                    <tr key={vehicle.id}>
+                      <Td>
+                        {vehicle.make} {vehicle.model}
+                      </Td>
+                      <Td align="right">
+                        <span
+                          className={vehicle.quantity === 0 ? "text-soldout" : "text-amber"}
+                        >
+                          {vehicle.quantity === 0 ? "Sold out" : vehicle.quantity}
+                        </span>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </DashboardSection>
           )}
 
-          {salesByCategory && salesByCategory.length > 0 && (
-            <DashboardSection title="Sales by Category">
-              {salesByCategory.map((row) => (
-                <li key={row.category} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="font-body text-sm capitalize text-ink">{row.category}</span>
-                  <span className="font-mono text-xs text-muted">{row.units_sold} sold</span>
-                </li>
-              ))}
-            </DashboardSection>
-          )}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {salesByCategory && salesByCategory.length > 0 && (
+              <DashboardSection title="Sales by Category">
+                <div className="space-y-1">
+                  {salesByCategory.map((row) => (
+                    <BarRow
+                      key={row.category}
+                      label={row.category}
+                      value={row.units_sold}
+                      maxValue={Math.max(...salesByCategory.map((r) => r.units_sold))}
+                      displayValue={`${row.units_sold} sold`}
+                    />
+                  ))}
+                </div>
+              </DashboardSection>
+            )}
 
-          {monthlySales && monthlySales.length > 0 && (
-            <DashboardSection title="Monthly Sales">
-              {monthlySales.map((row) => (
-                <li key={row.month} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="font-body text-sm text-ink">{row.month}</span>
-                  <span className="font-mono text-xs text-muted">
-                    {row.total_purchases} purchases
-                  </span>
-                </li>
-              ))}
-            </DashboardSection>
-          )}
+            {monthlySales && monthlySales.length > 0 && (
+              <DashboardSection title="Monthly Sales">
+                <div className="space-y-1">
+                  {monthlySales.map((row) => (
+                    <BarRow
+                      key={row.month}
+                      label={row.month}
+                      value={Number(row.revenue)}
+                      maxValue={Math.max(...monthlySales.map((r) => Number(r.revenue)))}
+                      displayValue={formatCurrency(row.revenue)}
+                    />
+                  ))}
+                </div>
+              </DashboardSection>
+            )}
+          </div>
         </>
       )}
 
@@ -228,7 +277,44 @@ function DashboardSection({ title, children }) {
       <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
         {title}
       </h2>
-      <ul className="plate divide-y divide-hairline">{children}</ul>
+      <div className="plate p-4">{children}</div>
+    </div>
+  );
+}
+
+function Th({ children, align = "left" }) {
+  return (
+    <th
+      className={`pb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
+    >
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, align = "left", muted = false }) {
+  return (
+    <td
+      className={`py-2.5 font-body text-sm ${muted ? "text-muted" : "text-ink"} ${
+        align === "right" ? "text-right font-mono text-xs" : "text-left"
+      }`}
+    >
+      {children}
+    </td>
+  );
+}
+
+function BarRow({ label, value, maxValue, displayValue }) {
+  const pct = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <span className="w-24 shrink-0 truncate font-mono text-xs capitalize text-ink">{label}</span>
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-hairline">
+        <div className="h-full rounded-full bg-amber" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="w-20 shrink-0 text-right font-mono text-xs text-muted">{displayValue}</span>
     </div>
   );
 }
