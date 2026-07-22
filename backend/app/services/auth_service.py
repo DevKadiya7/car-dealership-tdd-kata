@@ -1,56 +1,50 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-
-from jose import jwt
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-
-from app.config import ALGORITHM, SECRET_KEY
-from app.models.user import User
-from app.schemas.user import UserCreate
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+"""Business logic for registration and login. Kept free of HTTP and
+SQLAlchemy-session-lifecycle concerns so it's easy to unit test."""
+from app.auth.jwt_handler import create_access_token
+from app.auth.password import hash_password, verify_password
+from app.models.user import UserRole
+from app.repositories.user_repository import UserRepository
+from app.utils.exceptions import DuplicateEmailError, InvalidCredentialsError
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+class AuthService:
+    def __init__(self, user_repository: UserRepository):
+        self.user_repository = user_repository
 
+    def register(
+        self,
+        email: str,
+        password: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        mobile_number: str | None = None,
+        address: str | None = None,
+        city: str | None = None,
+        state: str | None = None,
+        country: str | None = None,
+        postal_code: str | None = None,
+        terms_accepted: bool | None = None,
+        role: UserRole = UserRole.CUSTOMER,
+    ):
+        if self.user_repository.get_by_email(email) is not None:
+            raise DuplicateEmailError(f"Email '{email}' is already registered")
+        return self.user_repository.create(
+            email=email,
+            hashed_password=hash_password(password),
+            role=role,
+            first_name=first_name,
+            last_name=last_name,
+            mobile_number=mobile_number,
+            address=address,
+            city=city,
+            state=state,
+            country=country,
+            postal_code=postal_code,
+            terms_accepted=terms_accepted,
+        )
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return None
-    if not verify_password(password, user.hashed_password):
-        return None
-    return user
-
-
-def create_user(db: Session, user: UserCreate) -> User:
-    existing = db.query(User).filter(User.email == user.email).first()
-    if existing:
-        raise ValueError("User already exists")
-    db_user = User(
-        email=str(user.email),
-        hashed_password=get_password_hash(user.password),
-        full_name=user.full_name,
-        role="customer",
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    def login(self, email: str, password: str) -> str:
+        user = self.user_repository.get_by_email(email)
+        if user is None or not verify_password(password, user.hashed_password):
+            raise InvalidCredentialsError("Invalid email or password")
+        return create_access_token(subject=str(user.id))
