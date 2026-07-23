@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { purchaseVehicle } from "../api/vehicles";
 import { formatMoney, calculateTotals } from "../utils/vehicle";
 import Invoice from "./Invoice";
+import Modal from "./Modal";
 
 const PAYMENT_METHODS = [
   { value: "credit", label: "Credit Card" },
@@ -89,7 +90,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const invoiceDate = new Date().toLocaleDateString();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <Modal>
       <div className="plate max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         {step === "form" && (
           <>
@@ -284,7 +285,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 

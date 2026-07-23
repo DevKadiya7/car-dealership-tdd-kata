@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { VEHICLE_CATEGORIES } from "../api/vehicles";
+import Modal from "./Modal";
 
 const blankForm = { make: "", model: "", category: "sedan", price: "", quantity: "", image_url: "" };
 
@@ -71,7 +72,7 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <Modal>
       <div className="plate w-full max-w-md p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-ink">
@@ -234,6 +235,6 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
           </button>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
