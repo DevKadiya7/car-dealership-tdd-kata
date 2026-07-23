@@ -4,6 +4,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.database import Base, engine
 from app.routers import auth, vehicles, purchase, customers
 from app.routers.dashboard import router as dashboard_router
@@ -16,7 +17,9 @@ app = FastAPI(title="Car Dealership Inventory API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    # Comma-separated in CORS_ORIGINS (.env) - defaults to the local Vite
+    # dev server. Add your frontend's real origin(s) when deploying.
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
