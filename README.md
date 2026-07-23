@@ -6,6 +6,8 @@ Every feature in this repository was built Red → Green → Refactor, with a ma
 
 ---
 
+> **Quick look, no setup:** demo login credentials are in [Demo accounts](#5-demo-accounts) below.
+
 ## Table of Contents
 
 - [Project Overview](#project-overview)
