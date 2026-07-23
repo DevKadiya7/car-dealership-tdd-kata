@@ -1,29 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { EMAIL_PATTERN } from "../utils/validation";
-
-const MOBILE_PATTERN = /^\+?\d{10,15}$/;
-
-const STRENGTH_LABELS = ["Weak", "Weak", "Weak", "Fair", "Good", "Strong"];
-const STRENGTH_COLORS = [
-  "text-soldout",
-  "text-soldout",
-  "text-soldout",
-  "text-amber",
-  "text-amber",
-  "text-available",
-];
-
-function passwordStrength(password) {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  return { label: STRENGTH_LABELS[score], color: STRENGTH_COLORS[score] };
-}
+import { EMAIL_PATTERN, MOBILE_PATTERN, passwordStrength, isPasswordStrong } from "../utils/validation";
 
 export default function Register() {
   const { register, login } = useAuth();
@@ -47,7 +25,7 @@ export default function Register() {
     if (!lastName.trim()) errors.lastName = "Last name is required.";
     if (!EMAIL_PATTERN.test(email)) errors.email = "Enter a valid email address.";
     if (!MOBILE_PATTERN.test(mobileNumber)) errors.mobileNumber = "Enter a valid mobile number.";
-    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    if (!isPasswordStrong(password)) {
       errors.password = "Password must be at least 8 characters and include a letter and a number.";
     }
     if (confirmPassword !== password) errors.confirmPassword = "Passwords do not match.";
