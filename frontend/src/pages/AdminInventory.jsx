@@ -16,6 +16,19 @@ import { CATEGORY_LABELS, formatPrice, SORT_OPTIONS, sortVehicles } from "../uti
 
 const PAGE_SIZE = 8;
 
+const STOCK_FILTERS = [
+  { value: "", label: "All Stock Levels" },
+  { value: "in", label: "In Stock" },
+  { value: "low", label: "Low Stock" },
+  { value: "sold", label: "Sold Out" },
+];
+
+function stockStatus(vehicle) {
+  if (vehicle.quantity === 0) return "sold";
+  if (vehicle.quantity <= 2) return "low";
+  return "in";
+}
+
 export default function AdminInventory() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +37,7 @@ export default function AdminInventory() {
   const [modalVehicle, setModalVehicle] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortBy, setSortBy] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
@@ -56,13 +70,20 @@ export default function AdminInventory() {
     }
   };
 
-  const sortedVehicles = useMemo(() => sortVehicles(vehicles, sortBy), [vehicles, sortBy]);
+  const filteredVehicles = useMemo(
+    () => (stockFilter ? vehicles.filter((v) => stockStatus(v) === stockFilter) : vehicles),
+    [vehicles, stockFilter]
+  );
+  const sortedVehicles = useMemo(
+    () => sortVehicles(filteredVehicles, sortBy),
+    [filteredVehicles, sortBy]
+  );
   const totalPages = Math.max(1, Math.ceil(sortedVehicles.length / PAGE_SIZE));
   const pageVehicles = sortedVehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
-  }, [vehicles, sortBy]);
+  }, [vehicles, sortBy, stockFilter]);
 
   const replaceVehicle = (updated) => {
     setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
@@ -123,7 +144,24 @@ export default function AdminInventory() {
         <SearchBar onSearch={handleSearch} onReset={load} />
       </div>
 
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex flex-wrap justify-end gap-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="inventory-stock-filter" className="font-mono text-xs uppercase tracking-wide text-muted">
+            Stock Status
+          </label>
+          <select
+            id="inventory-stock-filter"
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+            className="rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
+          >
+            {STOCK_FILTERS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-2">
           <label htmlFor="inventory-sort-by" className="font-mono text-xs uppercase tracking-wide text-muted">
             Sort by
@@ -163,6 +201,7 @@ export default function AdminInventory() {
             <table className="w-full text-left">
               <thead className="sticky top-0 bg-surface">
                 <tr className="border-b border-hairline">
+                  <Th>Image</Th>
                   <Th>Vehicle</Th>
                   <Th>Category</Th>
                   <Th align="right">Price</Th>
@@ -177,6 +216,9 @@ export default function AdminInventory() {
                   const lowStock = vehicle.quantity > 0 && vehicle.quantity <= 2;
                   return (
                     <tr key={vehicle.id}>
+                      <Td>
+                        <VehicleThumbnail vehicle={vehicle} />
+                      </Td>
                       <Td>
                         {vehicle.make} {vehicle.model}
                       </Td>
@@ -241,5 +283,26 @@ export default function AdminInventory() {
         />
       )}
     </div>
+  );
+}
+
+function VehicleThumbnail({ vehicle }) {
+  const [imageError, setImageError] = useState(false);
+
+  if (!vehicle.image_url || imageError) {
+    return (
+      <div className="flex h-10 w-14 items-center justify-center rounded-sm bg-raised font-mono text-[9px] uppercase tracking-wide text-muted">
+        No Image
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={vehicle.image_url}
+      alt={`${vehicle.make} ${vehicle.model}`}
+      onError={() => setImageError(true)}
+      className="h-10 w-14 rounded-sm object-cover"
+    />
   );
 }
