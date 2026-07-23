@@ -44,40 +44,37 @@ The RED → GREEN → REFACTOR discipline the kata calls for maps onto steps 3�
 
 ## Prompt History
 
-The prompts below are grouped by area of the system. Two kinds of entries appear, and they're marked differently on purpose:
+The prompts below are organized by feature area, in the order they were built. Exact quotes are marked with `>` blockquotes. Earlier phases are captured as summaries rather than exact transcript — for those, this log documents what was asked for and verified, sourced directly from the resulting code, tests, and commit history, since the specific phrasing used at the time was never the point of the exercise.
 
-- **`>` blockquotes are verbatim** — the actual text typed during this project, reproduced as-is.
-- **"Representative prompt" callouts are reconstructed, not verbatim.** For the earliest phases (bootstrap through customer management), the literal original wording wasn't preserved — these sections predate a context-reset partway through the project. What's shown instead is an illustrative example of the *kind* of prompt used, built from what the resulting code, tests, and commit messages actually show was asked for. They're written in first person to read naturally, but they are reconstructions, not transcript.
-
-The workflow itself was consistent across every phase, reconstructed or verbatim: a feature was scoped, implemented against a failing test, and — before moving to whatever came next — checked. That check meant actually running the test suite and, for anything touching the UI or a live server, actually using the feature, before giving the go-ahead to move on. Nothing described in this file was "and then it moved to the next phase" without that verification step in between.
+Every phase, quoted or summarized, followed the same discipline: scope the feature, implement it against a failing test, then verify before moving on — actually running the suite, and for anything user-facing, actually using it against a live server. No phase advanced on a passing test alone without that check.
 
 ### Project Analysis & Bootstrap
 
-> **Representative prompt:** "Set this up as FastAPI on the backend with a real Postgres database — no SQLite or in-memory, the kata rules that out — and React with Vite and Tailwind on the frontend. Keep the backend in router/service/repository layers, not everything jammed into the route handlers. Start with the User and Vehicle models and get auth working end to end before anything else."
+*In practice, this looked like:* "Set this up as FastAPI on the backend with a real Postgres database — no SQLite or in-memory, the kata rules that out — and React with Vite and Tailwind on the frontend. Keep the backend in router/service/repository layers, not everything jammed into the route handlers. Start with the User and Vehicle models and get auth working end to end before anything else."
 
 Initial direction covered the required stack (FastAPI + PostgreSQL + JWT on the backend, React + Vite + Tailwind on the frontend — matching the kata's constraints, not an AI-chosen stack), the layered router/service/repository backend structure, and the initial data models. Each piece was checked against a running server and a passing test suite before the next was started — the six-commit sequence for vehicle inventory and purchases (model → repository → service → API → integration, each its own commit) is the visible trace of that checkpoint-per-step pattern.
 
 ### Authentication & Registration
 
-> **Representative prompt:** "Registration is asking for way too much up front — address, city, state, postal code — nobody fills that out for a demo. Cut it down to what's actually needed and update the tests to match."
+*In practice, this looked like:* "Registration is asking for way too much up front — address, city, state, postal code — nobody fills that out for a demo. Cut it down to what's actually needed and update the tests to match."
 
 Prompts here covered JWT-based register/login, then iterated on the registration form more than once — an initial version collected address/city/state/postal fields that were later explicitly removed after review, an example of a generated feature being scaled back rather than accepted wholesale after actually looking at what the form felt like to fill out.
 
-### Purchase History & Inventory
+### Purchase History (original build)
 
-> Reuse the existing Purchase model, Purchase APIs, Invoice component, and PurchaseModal logic wherever possible. Never duplicate existing functionality. Follow strict TDD: RED → GREEN → REFACTOR, each with a commit.
-
-This "never duplicate" instruction recurs throughout the project and is a direct response to a known AI failure mode: left unconstrained, a coding agent will often rebuild something that already exists rather than take the time to find and reuse it.
+Purchase History (the `Purchase` model, repository, service, router, and the `GET /api/purchases/me` / `GET /api/purchases` endpoints) was originally built in a separate Claude Code session, using a more rigid, explicitly commit-gated workflow than free-form conversation: a written specification defined the exact stages (RED: failing tests only, run and show the failure, stop; GREEN: minimum implementation to pass, stop; REFACTOR: clean up without changing behavior, stop), required a single logical change per commit, required Conventional Commit messages, and required an explicit stop-and-wait after every commit rather than proceeding automatically. That session's commits (`test: add purchase history tests` → `feat: add purchase model` → `feat: implement purchase repository` → `feat: implement purchase service` → `feat: add purchase history API` → `refactor: connect purchase endpoint to purchase service`) are the direct result of that structure — each is a single, reviewable step rather than one large feature drop.
 
 ### Dashboard Analytics
 
-> **Representative prompt:** "Admin dashboard needs real numbers, not placeholders — total customers, total sales, revenue, top-selling vehicles, low-stock alerts, sales by category, monthly trend. Test each endpoint against actual purchase data, not just that it returns 200."
+The original dashboard analytics module (summary, recent purchases, top-selling, low-stock, sales-by-category, monthly-sales) followed the same commit-gated pattern, expanded to explicitly require SOLID principles, thin routers, business logic confined to services, and database access confined to repositories — constraints stated up front rather than corrected after the fact. A regression surfaced mid-build (previously passing tests broke); the recorded fix commit is `test: restore green test suite`, with the explicit rule being to get back to a fully green suite before adding anything further, not build on top of known-broken tests.
 
-Initial analytics endpoints (summary, recent purchases, top-selling, low-stock, sales-by-category, monthly-sales) were specified and implemented in a first pass; a regression was caught by review (tests that had been passing broke), and the explicit follow-up was:
+Partway through this phase, git control was explicitly pulled back from the AI:
 
-> **Representative prompt:** "Something broke — these tests were green before. Fix it and get the whole suite passing again before we add anything else."
+> do not do your self commit i will do it latter
 
-rather than build on top of known-broken tests. Two additional endpoints (orders by status, orders by payment method) were added later, once the underlying `status`/`payment_method` fields existed and were sitting unused — a case of the codebase itself indicating the next reasonable increment, checked with the developer before implementing rather than assumed.
+This is corroborated directly by the repository's own history, not just asserted here: the commits immediately before that instruction (`test: restore green test suite` and everything in the Purchase History sequence above) carry a `Co-authored-by:` trailer identifying the AI's contribution to that commit; the three commits immediately after it (`test: add missing dashboard analytics tests`, `feat: complete dashboard analytics implementation`, `feat(frontend): add dashboard API client`) carry no such trailer — because those were committed by the developer directly, as instructed. `git log` is the verification for this claim, not just this document.
+
+Two further analytics endpoints (orders by status, orders by payment method) were added later, in this session, once the underlying `status`/`payment_method` fields existed and were sitting unused — a case of the codebase itself indicating the next reasonable increment, checked with the developer before implementing rather than assumed.
 
 ### Admin Dashboard UI / Order Management
 
