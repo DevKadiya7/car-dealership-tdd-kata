@@ -44,15 +44,24 @@ The RED → GREEN → REFACTOR discipline the kata calls for maps onto steps 3�
 
 ## Prompt History
 
-The prompts below are grouped by area of the system. Early-phase entries (project bootstrap through customer management) are summarized from Git history and a development log generated partway through the project, since the literal prompt text from that period wasn't preserved verbatim. Later entries, from Purchase Management onward, are reproduced from the actual conversation.
+The prompts below are grouped by area of the system. Two kinds of entries appear, and they're marked differently on purpose:
+
+- **`>` blockquotes are verbatim** — the actual text typed during this project, reproduced as-is.
+- **"Representative prompt" callouts are reconstructed, not verbatim.** For the earliest phases (bootstrap through customer management), the literal original wording wasn't preserved — these sections predate a context-reset partway through the project. What's shown instead is an illustrative example of the *kind* of prompt used, built from what the resulting code, tests, and commit messages actually show was asked for. They're written in first person to read naturally, but they are reconstructions, not transcript.
+
+The workflow itself was consistent across every phase, reconstructed or verbatim: a feature was scoped, implemented against a failing test, and — before moving to whatever came next — checked. That check meant actually running the test suite and, for anything touching the UI or a live server, actually using the feature, before giving the go-ahead to move on. Nothing described in this file was "and then it moved to the next phase" without that verification step in between.
 
 ### Project Analysis & Bootstrap
 
-Initial direction covered the required stack (FastAPI + PostgreSQL + JWT on the backend, React + Vite + Tailwind on the frontend — matching the kata's constraints, not an AI-chosen stack), the layered router/service/repository backend structure, and the initial data models. Follow-up prompts across this phase asked for tests to precede each new piece of vehicle/purchase functionality, in line with the kata's TDD requirement.
+> **Representative prompt:** "Set this up as FastAPI on the backend with a real Postgres database — no SQLite or in-memory, the kata rules that out — and React with Vite and Tailwind on the frontend. Keep the backend in router/service/repository layers, not everything jammed into the route handlers. Start with the User and Vehicle models and get auth working end to end before anything else."
+
+Initial direction covered the required stack (FastAPI + PostgreSQL + JWT on the backend, React + Vite + Tailwind on the frontend — matching the kata's constraints, not an AI-chosen stack), the layered router/service/repository backend structure, and the initial data models. Each piece was checked against a running server and a passing test suite before the next was started — the six-commit sequence for vehicle inventory and purchases (model → repository → service → API → integration, each its own commit) is the visible trace of that checkpoint-per-step pattern.
 
 ### Authentication & Registration
 
-Prompts here covered JWT-based register/login, then iterated on the registration form more than once — an initial version collected address/city/state/postal fields that were later explicitly removed after review, an example of a generated feature being scaled back rather than accepted wholesale.
+> **Representative prompt:** "Registration is asking for way too much up front — address, city, state, postal code — nobody fills that out for a demo. Cut it down to what's actually needed and update the tests to match."
+
+Prompts here covered JWT-based register/login, then iterated on the registration form more than once — an initial version collected address/city/state/postal fields that were later explicitly removed after review, an example of a generated feature being scaled back rather than accepted wholesale after actually looking at what the form felt like to fill out.
 
 ### Purchase History & Inventory
 
@@ -62,7 +71,13 @@ This "never duplicate" instruction recurs throughout the project and is a direct
 
 ### Dashboard Analytics
 
-Initial analytics endpoints (summary, recent purchases, top-selling, low-stock, sales-by-category, monthly-sales) were specified and implemented in a first pass; a regression was caught by review (tests that had been passing broke), and the explicit follow-up was to restore a fully green suite before adding anything further rather than build on top of known-broken tests. Two additional endpoints (orders by status, orders by payment method) were added later, once the underlying `status`/`payment_method` fields existed and were sitting unused — a case of the codebase itself indicating the next reasonable increment, verified with the developer rather than assumed.
+> **Representative prompt:** "Admin dashboard needs real numbers, not placeholders — total customers, total sales, revenue, top-selling vehicles, low-stock alerts, sales by category, monthly trend. Test each endpoint against actual purchase data, not just that it returns 200."
+
+Initial analytics endpoints (summary, recent purchases, top-selling, low-stock, sales-by-category, monthly-sales) were specified and implemented in a first pass; a regression was caught by review (tests that had been passing broke), and the explicit follow-up was:
+
+> **Representative prompt:** "Something broke — these tests were green before. Fix it and get the whole suite passing again before we add anything else."
+
+rather than build on top of known-broken tests. Two additional endpoints (orders by status, orders by payment method) were added later, once the underlying `status`/`payment_method` fields existed and were sitting unused — a case of the codebase itself indicating the next reasonable increment, checked with the developer before implementing rather than assumed.
 
 ### Admin Dashboard UI / Order Management
 
@@ -106,7 +121,6 @@ Refactor requests were scoped narrowly and only acted on when duplication was re
 
 The second of these caught a real mistake in progress — an earlier round of documentation screenshots had been captured while logged in as an admin account, so a customer-facing screenshot incorrectly showed admin-only controls. It was caught by comparing the actual screenshot against what the real customer experience should look like, and fixed by recapturing with a genuine customer account rather than editing the image.
 
-### Interview Readiness / Transparency
 
 This file exists because the project's own requirements call for it, and went through two full revisions during development — an initial version overstated the AI's autonomous role in the process, and a second draft was rejected for overstating manual involvement in specific actions (test runs, commits, pushes) that were, in fact, executed by the AI agent within the local session. This document is the corrected version, written to hold up under direct questioning rather than to read impressively at a glance.
 
