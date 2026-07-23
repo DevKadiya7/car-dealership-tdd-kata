@@ -6,7 +6,6 @@ import {
   addVehicle,
   updateVehicle,
   deleteVehicle,
-  purchaseVehicle,
   restockVehicle,
 } from "../api/vehicles";
 import SearchBar from "../components/SearchBar";
@@ -74,11 +73,6 @@ export default function Dashboard() {
 
   const replaceVehicle = (updated) => {
     setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
-  };
-
-  const handlePurchase = async (vehicle) => {
-    const updated = await purchaseVehicle(vehicle.id);
-    replaceVehicle(updated);
   };
 
   const handleRestock = async (vehicle) => {
@@ -172,7 +166,7 @@ export default function Dashboard() {
                 key={vehicle.id}
                 vehicle={vehicle}
                 isAdmin={isAdmin}
-                onPurchase={handlePurchase}
+                onPurchase={replaceVehicle}
                 onRestock={handleRestock}
                 onEdit={setModalVehicle}
                 onDelete={handleDelete}

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
-import { getVehicle, purchaseVehicle } from "../api/vehicles";
+import { getVehicle } from "../api/vehicles";
 import Loader from "../components/Loader";
+import PurchaseModal from "../components/PurchaseModal";
 import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
 
 export default function VehicleDetail() {
@@ -11,7 +12,7 @@ export default function VehicleDetail() {
   const [vehicle, setVehicle] = useState(location.state?.vehicle || null);
   const [loading, setLoading] = useState(!location.state?.vehicle);
   const [errorMsg, setErrorMsg] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [showPurchase, setShowPurchase] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -31,16 +32,6 @@ export default function VehicleDetail() {
       load();
     }
   }, [load, location.state]);
-
-  const handlePurchase = async () => {
-    setBusy(true);
-    try {
-      const updated = await purchaseVehicle(id);
-      setVehicle(updated);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -125,14 +116,22 @@ export default function VehicleDetail() {
 
           <button
             type="button"
-            disabled={outOfStock || busy}
-            onClick={handlePurchase}
+            disabled={outOfStock}
+            onClick={() => setShowPurchase(true)}
             className="mt-6 w-full rounded-sm bg-amber px-4 py-2.5 font-body text-sm font-semibold uppercase tracking-wide text-bg transition-colors hover:bg-amber/90 disabled:cursor-not-allowed disabled:bg-hairline disabled:text-muted"
           >
-            {outOfStock ? "Sold Out" : busy ? "Working…" : "Purchase"}
+            {outOfStock ? "Sold Out" : "Purchase"}
           </button>
         </div>
       </div>
+
+      {showPurchase && (
+        <PurchaseModal
+          vehicle={vehicle}
+          onClose={() => setShowPurchase(false)}
+          onSuccess={setVehicle}
+        />
+      )}
     </div>
   );
 }

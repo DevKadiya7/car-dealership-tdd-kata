@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
+import PurchaseModal from "./PurchaseModal";
 
 export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, onEdit, onDelete }) {
   const [busy, setBusy] = useState(false);
+  const [showPurchase, setShowPurchase] = useState(false);
   const outOfStock = vehicle.quantity === 0;
   const lowStock = vehicle.quantity > 0 && vehicle.quantity <= 2;
 
@@ -81,10 +83,10 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
           <button
             type="button"
             disabled={outOfStock || busy}
-            onClick={() => runAction(() => onPurchase(vehicle))}
+            onClick={() => setShowPurchase(true)}
             className="w-full rounded-sm bg-amber px-4 py-2.5 font-body text-sm font-semibold uppercase tracking-wide text-bg transition-colors hover:bg-amber/90 disabled:cursor-not-allowed disabled:bg-hairline disabled:text-muted"
           >
-            {outOfStock ? "Sold Out" : busy ? "Working…" : "Purchase"}
+            {outOfStock ? "Sold Out" : "Purchase"}
           </button>
 
           {isAdmin && (
@@ -116,6 +118,14 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
           )}
         </div>
       </div>
+
+      {showPurchase && (
+        <PurchaseModal
+          vehicle={vehicle}
+          onClose={() => setShowPurchase(false)}
+          onSuccess={onPurchase}
+        />
+      )}
     </article>
   );
 }
