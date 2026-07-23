@@ -10,12 +10,20 @@ class PurchaseRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, user_id: uuid.UUID, vehicle_id: uuid.UUID, quantity: int, total_price):
+    def create(
+        self,
+        user_id: uuid.UUID,
+        vehicle_id: uuid.UUID,
+        quantity: int,
+        total_price,
+        payment_method: str | None = None,
+    ):
         purchase = Purchase(
             user_id=user_id,
             vehicle_id=vehicle_id,
             quantity=quantity,
             total_price=total_price,
+            payment_method=payment_method or "unknown",
         )
         self.db.add(purchase)
         self.db.commit()
@@ -30,6 +38,15 @@ class PurchaseRepository:
             "quantity": purchase.quantity,
             "total_price": purchase.total_price,
             "purchased_at": purchase.purchased_at,
+            "payment_method": purchase.payment_method or "unknown",
+            "status": purchase.status,
+            "vehicle_make": purchase.vehicle.make,
+            "vehicle_model": purchase.vehicle.model,
+            "customer_email": purchase.user.email,
+            "customer_name": " ".join(
+                filter(None, [purchase.user.first_name, purchase.user.last_name])
+            )
+            or purchase.user.email,
         }
 
     def list_by_user(self, user_id: uuid.UUID):

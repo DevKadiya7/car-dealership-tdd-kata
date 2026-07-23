@@ -27,8 +27,8 @@ export const updateVehicle = (id, changes) =>
 
 export const deleteVehicle = (id) => api.delete(`/api/vehicles/${id}`);
 
-export const purchaseVehicle = (id) =>
-  api.post(`/api/vehicles/${id}/purchase`).then((r) => r.data);
+export const purchaseVehicle = (id, paymentMethod) =>
+  api.post(`/api/vehicles/${id}/purchase`, { payment_method: paymentMethod }).then((r) => r.data);
 
 export const restockVehicle = (id) =>
   api.post(`/api/vehicles/${id}/restock`).then((r) => r.data);

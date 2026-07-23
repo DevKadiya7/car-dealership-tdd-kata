@@ -12,7 +12,13 @@ class PurchaseService:
         self.purchase_repository = purchase_repository
         self.vehicle_repository = vehicle_repository
 
-    def purchase_vehicle(self, user_id: uuid.UUID, vehicle_id: uuid.UUID, amount: int = 1):
+    def purchase_vehicle(
+        self,
+        user_id: uuid.UUID,
+        vehicle_id: uuid.UUID,
+        amount: int = 1,
+        payment_method: str | None = None,
+    ):
         vehicle = self.vehicle_repository.get_by_id(vehicle_id)
         if vehicle is None:
             raise VehicleNotFoundError(f"Vehicle '{vehicle_id}' not found")
@@ -31,6 +37,7 @@ class PurchaseService:
             vehicle_id=vehicle_id,
             quantity=amount,
             total_price=total_price,
+            payment_method=payment_method,
         )
 
         return vehicle

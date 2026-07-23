@@ -9,6 +9,7 @@ from app.auth.dependencies import get_current_user, require_admin
 from app.database import get_db
 from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.vehicle_repository import VehicleRepository
+from app.schemas.purchase import PurchaseRequest
 from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
 from app.services.purchase_service import PurchaseService
 from app.services.vehicle_service import VehicleService
@@ -95,11 +96,14 @@ def delete_vehicle(
 @router.post("/{vehicle_id}/purchase", response_model=VehicleOut)
 def purchase_vehicle(
     vehicle_id: uuid.UUID,
+    payload: PurchaseRequest = PurchaseRequest(),
     purchase_service: PurchaseService = Depends(get_purchase_service),
     current_user=Depends(get_current_user),
 ):
     try:
-        return purchase_service.purchase_vehicle(current_user.id, vehicle_id)
+        return purchase_service.purchase_vehicle(
+            current_user.id, vehicle_id, payment_method=payload.payment_method
+        )
     except VehicleNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except InsufficientStockError as exc:

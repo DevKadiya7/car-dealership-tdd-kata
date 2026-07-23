@@ -11,6 +11,7 @@ import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
 import AdminCustomers from "./pages/AdminCustomers";
+import AdminOrders from "./pages/AdminOrders";
 
 export default function App() {
   return (
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="vehicles" element={<AdminInventory />} />
             <Route path="customers" element={<AdminCustomers />} />
+            <Route path="purchases" element={<AdminOrders />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>

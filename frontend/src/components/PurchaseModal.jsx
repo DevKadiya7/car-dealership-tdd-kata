@@ -74,7 +74,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const updated = await purchaseVehicle(vehicle.id);
+      const updated = await purchaseVehicle(vehicle.id, paymentMethod);
       setPurchasedVehicle(updated);
       setStep("success");
       onSuccess(updated);
