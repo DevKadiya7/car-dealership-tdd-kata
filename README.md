@@ -107,15 +107,22 @@ cd backend && python -m pytest
 cd frontend && npm test
 ```
 
-### 5. Creating an admin user
+### 5. Demo accounts
 
-New registrations default to the `customer` role. Promote one manually:
+For reviewers who just want to click around without registering:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `devkadiya@gmail.com` | `Craftsman1` |
+| Customer | `customer.demo@example.com` | `Demo1234` |
+
+Log in with the admin account and visit `/admin/dashboard` to see the full back office (inventory, customers, orders, analytics, settings).
+
+To promote any other registered account to admin manually:
 
 ```sql
 UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
 ```
-
-Then log in and visit `/admin/dashboard`.
 
 ## API Reference
 

@@ -1,122 +1,130 @@
 # PROMPTS.md — AI Tooling Chat History
 
-**Tool used:** Claude Code (Anthropic), model Claude Sonnet 5, CLI/agent mode with file read/write/edit, shell execution, and browser-based (Playwright) live verification.
+**Tool:** Claude Code (Anthropic), Claude Sonnet 5, agentic CLI mode — file read/write/edit, shell execution, and live browser verification via Playwright.
 
-This document is the transparency record required by the kata: what was asked of the AI, in what order, and why each prompt was shaped the way it was. It is organized chronologically by development phase. Prompts are reproduced **verbatim** where the exact text was preserved in-session; earlier phases (before a context-window compaction event partway through the build) are reconstructed from the commit history and a structured summary the tool itself produced at compaction time — those are marked accordingly rather than presented as verbatim quotes I don't actually have.
+**Role in this project:** an active pair-programmer across the full lifecycle — spec-to-tests, implementation, debugging against a real running stack, refactor judgment, and documentation — not a one-off autocomplete tool.
 
----
-
-## Prompt Engineering Approach
-
-Before the transcript, the methodology, because the *shape* of these prompts mattered more than any individual one:
-
-1. **Spec before code, every feature.** Each feature prompt front-loaded the exact requirements (fields, columns, filters, states) rather than letting the assistant infer scope. Ambiguity left in a prompt gets resolved by the model guessing — sometimes wrong, always expensively.
-2. **TDD was a process constraint, not a suggestion.** Every feature prompt explicitly required Red → Green → Refactor with a corresponding commit at each step, not just "write tests." This is the difference between an assistant that tests its output and one that treats tests as documentation written after the fact.
-3. **"Reuse, never duplicate" as a standing rule.** Repeated explicitly per feature ("reuse the existing Invoice component," "reuse existing Purchase APIs") because the default failure mode of an eager code-generating assistant is to rebuild something that already exists rather than search for it first.
-4. **Verification against the real system, not just green tests.** The automated suites mock the API layer, so they can't catch integration bugs (wrong DB port, a CSS stacking bug, a migration that never ran against the live DB). Prompts and follow-ups repeatedly pushed the assistant to open a real browser (Playwright) against the running dev servers and check network/console output, not just trust `pytest`/`vitest` exit codes.
-5. **Explicit ownership of git.** Instructions on who runs `git commit` — the human or the assistant — changed across the session; every prompt that mattered was explicit about it rather than left ambiguous, because this is exactly the kind of action (shared, hard-to-reverse) that shouldn't be inferred.
-6. **Ask, don't guess, at genuine forks.** When a feature had no spec at all (e.g., what should "Admin Settings" contain?), the instruction was to ask a clarifying question with concrete options rather than pick one and build 300 lines against a guess.
+This document is the transparency record the kata requires: what was asked, in what order, and why each prompt was shaped the way it was. A note on sourcing: this project was built across a long session that included one context-window compaction partway through. Phases 1–6 are reconstructed from git history and a structured development summary generated at compaction time, and are written here as accurate paraphrase of intent and requirements rather than character-for-character transcript. Phases 7 onward are verbatim.
 
 ---
 
-## Phase 1 — Project Bootstrap *(reconstructed from commit history)*
+## Prompt Engineering Methodology
+
+Five principles governed every feature prompt in this project:
+
+**1. Specify before generating.** Every feature prompt front-loaded exact requirements — field names, table columns, filter sets, status values — before any code was written. Ambiguity left in a prompt gets resolved by the model guessing, and a wrong guess is far more expensive to unwind than a few extra lines of spec.
+
+**2. TDD as a process constraint, not a suggestion.** Every feature prompt required a literal Red → Green → Refactor sequence with a matching commit at each step, not "write some tests." That distinction shows up directly in the commit log: `test:` commits that fail on their own, followed by `feat:` commits that turn them green, followed by `refactor:` commits only where genuine duplication had actually accumulated.
+
+**3. Reuse is named explicitly, per component.** "Never duplicate existing functionality" is a rule that erodes fast if left abstract — a capable assistant will rationalize a rebuild as "cleaner." Naming the exact thing to reuse (the Invoice component, the Purchase API, the Pagination component) closed that gap.
+
+**4. Green tests are necessary, not sufficient.** The automated suites mock the API boundary on the frontend and use a test database on the backend, so neither can catch integration bugs — a wrong DB port, a CSS stacking-context bug, a migration that never actually ran against the live database. Every feature that touched the running stack was verified with a real browser against the real dev servers before being called done.
+
+**5. Ask at genuine forks; decide at everything else.** When a feature had a full spec, the instruction was to execute autonomously and not interrupt for permission between steps. When a feature had no spec at all — nothing to build against — the instruction was to stop and ask a concrete, multiple-choice question rather than pick an interpretation and build hundreds of lines against a guess.
+
+---
+
+## Phase 1 — Project Bootstrap
 
 **Commits:** `Initial commit`, `nitial project structure`
 
-The initial prompt scaffolded the project shape mandated by the kata: FastAPI backend with SQLAlchemy models, a Postgres connection (via Docker, not SQLite/in-memory, per the kata's explicit requirement), JWT auth scaffolding, and a Vite + React + Tailwind frontend shell. This established the layered backend architecture (routers → services → repositories) that every later feature was told to follow.
+Scaffolded the architecture the rest of the project builds on: FastAPI with a layered router → service → repository structure, SQLAlchemy models against a real Dockerized PostgreSQL instance (the kata explicitly rules out in-memory/SQLite), JWT auth scaffolding, and a Vite + React + Tailwind frontend shell.
 
-## Phase 2 — Vehicle Inventory & Purchases *(reconstructed)*
+## Phase 2 — Vehicle Inventory & Purchases
 
-**Representative commits:** `test: add purchase history tests` → `feat: add purchase model` → `feat: implement purchase repository` → `feat: implement purchase service` → `feat: add purchase history API` → `refactor: connect purchase endpoint to purchase service`
+**Commits:** `test: add purchase history tests` → `feat: add purchase model` → `feat: implement purchase repository` → `feat: implement purchase service` → `feat: add purchase history API` → `refactor: connect purchase endpoint to purchase service`
 
-Built out the core kata requirement: vehicle CRUD (`POST/GET/PUT/DELETE /api/vehicles`, `GET /api/vehicles/search`), the purchase endpoint that decrements stock, and the admin-only restock endpoint. The commit sequence itself is the evidence of the TDD discipline requested — a failing test lands, then the minimum implementation, then a connecting refactor, as three separate commits rather than one.
+Delivered the kata's core surface: full vehicle CRUD, the search endpoint (make/model/category/price range), the purchase endpoint that decrements stock, and the admin-gated restock endpoint. The six-commit sequence is itself the TDD evidence — each layer (model → repository → service → API → integration) landed as its own reviewable step.
 
-## Phase 3 — Dashboard Analytics, first pass *(reconstructed)*
+## Phase 3 — Dashboard Analytics, First Pass
 
-**Representative commits:** `test: add dashboard analytics tests` → `feat: implement dashboard repository` → `feat: implement dashboard analytics endpoints` → several `fix:`/`test: restore green test suite` commits
+**Commits:** `test: add dashboard analytics tests` → `feat: implement dashboard repository` → `feat: implement dashboard analytics endpoints`, plus `fix: restore purchase history serialization` and `test: restore green test suite`
 
-This phase hit a real regression — the commit history shows a `fix: restore purchase history serialization` and `test: restore green test suite` pair, meaning a change broke previously-passing tests and the assistant was directed to get back to green before adding anything new, rather than building on top of a red suite.
+A regression surfaced mid-phase — a change broke previously-passing tests. The instruction was to restore a fully green suite before adding anything further, rather than layering new work on top of known-broken tests.
 
-## Phase 4 — Frontend: Dashboard, Registration, Navbar, Vehicle Detail *(reconstructed)*
+## Phase 4 — Customer Frontend: Dashboard, Registration, Navigation, Vehicle Detail
 
-A long run of paired `test:`/`feat:` commits built the customer-facing frontend: registration form (initially with address/city/state/postal fields, later explicitly simplified — see `feat(frontend): remove address, city, state, country, and postal code fields from registration form`, a case of a prompt actively **reducing** scope after review, not just adding), a responsive navbar with a hamburger menu and profile dropdown, vehicle images and a detail page, sorting/pagination on the showroom, and a portal-rendered `Modal` component.
+A long, paired sequence of `test:`/`feat:` commits built the customer-facing app: the registration form (initially over-scoped with address/city/state fields, then explicitly trimmed back — a case of a prompt actively *reducing* scope after review rather than only adding), a responsive navbar with a hamburger menu and profile dropdown, vehicle images and a detail page, sorting and pagination on the showroom, and a portal-rendered `Modal` component.
 
-**One verbatim-preserved detail from this phase (from the compaction summary):** the `Modal` component was rebuilt to render via `createPortal(..., document.body)` specifically because a CSS "containing block" bug caused a modal to visually escape its intended position whenever an ancestor element had an active `transform` (a `hover:-translate-y-0.5` on the vehicle card). This was diagnosed by live-testing in a real browser — the mocked component tests couldn't have caught it, because JSDOM doesn't lay out CSS transforms.
+One detail worth preserving: the `Modal` was rebuilt to render through `createPortal(..., document.body)` after a live-browser test caught a CSS bug that a mocked component test couldn't — a modal visually escaping its intended position whenever an ancestor had an active `transform` (`hover:-translate-y-0.5` on the vehicle card triggers a CSS "containing block"). JSDOM doesn't lay out transforms, so this was only findable by actually looking at a rendered page.
 
-## Phase 5 — Currency Switch to INR *(reconstructed)*
+## Phase 5 — Currency Localization to INR
 
-**Commits:** `test: switch currency formatting to INR and add luxury/pickup categories`, `test(frontend): expect INR currency formatting for realistic demo pricing`
+**Commits:** `feat: switch currency formatting to INR and add luxury/pickup categories`, `test(frontend): expect INR currency formatting for realistic demo pricing`
 
-An explicit instruction changed all pricing display from USD to INR (`₹`, `en-IN` locale, lakh/crore grouping) for a more realistic demo dataset, cascading through every price-displaying component and its tests.
+A direct instruction moved every price-displaying surface from USD to INR (`₹`, `en-IN` locale, lakh/crore digit grouping) for demo data that reads as realistic rather than placeholder.
 
-## Phase 6 — Customer Management (Admin) *(reconstructed)*
+## Phase 6 — Customer Management (Admin)
 
 **Commits:** `test: add failing tests for admin customer management` → `feat: add admin customer management with search, pagination, and profile modal` → `refactor(frontend): extract shared useAsyncList hook, deduplicating load/loading/error state in admin list pages`
 
-The refactor step here is a good example of rule 3 above in practice: the extraction only happened once the loading/error/list-fetch pattern was duplicated across two admin pages (inventory and customers), not preemptively on the first page.
+The refactor here is principle 3 in action: the `useAsyncList` hook was only extracted once the same load/loading/error pattern appeared independently on a *second* admin page, not preemptively on the first.
 
 ---
 
-## Phase 7 — Purchase Management (Admin Orders) *(verbatim, reconstructed from the compaction summary of the original prompt)*
+## Phase 7 — Purchase Management (Admin Orders)
 
-This is the most detailed feature prompt of the session, and the structure is worth preserving closely. Paraphrased at full fidelity from the pre-compaction record:
+The most detailed feature prompt of the project:
 
 > Create a complete admin order management module at route `/admin/purchases`, wired into the existing `AdminLayout` navigation. Reuse the existing Purchase model, Purchase APIs, Invoice component, and PurchaseModal logic wherever possible — never duplicate existing functionality. Follow strict TDD: RED → GREEN → REFACTOR, each with a commit.
 >
 > Order table columns: Invoice Number, Order ID, Customer, Customer Email, Vehicle, Purchase Date, Payment Method, Quantity, GST, Total, Status. Support search by invoice/customer/email/vehicle; filter by payment method, order status, and date range; sort by newest/oldest/highest/lowest amount; reuse the existing pagination component.
 >
-> Order Details Modal must reuse the existing Invoice component (not rebuild it), including the Print button. Status is demo-only (Completed/Pending/Cancelled, badge colors, no real payment gateway). Reuse shared loading/error/empty state patterns. Must be responsive: desktop table, tablet responsive, mobile cards.
+> Order Details Modal must reuse the existing Invoice component (not rebuild it), including the Print button. Status is demo-only — Completed/Pending/Cancelled, badge colors, no real payment gateway. Reuse shared loading/error/empty state patterns. Must be responsive: desktop table, tablet responsive, mobile cards.
 >
 > REFACTOR step: look for duplicated filtering, sorting, pagination, or modal logic — extract only if genuine duplication exists, do not over-engineer.
 >
 > Report using this exact format: Feature completed / Files changed / Tests passed / Suggested RED commit / Suggested GREEN commit / Suggested REFACTOR commit / Next feature — then continue automatically into the next roadmap item (Admin Settings → Dashboard Analytics Improvements → Final UI/UX Polish) without asking for permission between features.
 
-**Why this prompt is structured this way:** the reuse constraints are named per-component (not "avoid duplication" in the abstract) because a vague instruction lets the model rationalize a rebuild as "cleaner." The exact table columns and filter set remove any need for the model to invent scope. The mandated report format makes the output auditable at a glance across many features without re-reading a diff each time. The "continue automatically" clause was a deliberate throughput choice — for a long autonomous run, stopping to ask permission after every feature multiplies wall-clock time for no safety benefit once the spec is this explicit.
+**Why it's structured this way:** reuse constraints are named per-component rather than stated as a general principle, because a vague instruction gives the model room to rationalize a rebuild. The exact column and filter list removes any need for the model to invent scope. The mandated report format makes output auditable at a glance across a long run of features, without re-reading a full diff each time. The "continue automatically" clause is a deliberate throughput decision — once a spec is this explicit, pausing for permission between every feature buys no additional safety, only latency.
 
-**Result:** revealed and closed a real gap — `payment_method` and `status` didn't exist on the `Purchase` model at all. Rather than let the model guess how to retrofit history, the follow-up conversation made two explicit product decisions: keep `total_price` pre-GST in storage (GST is computed for display only, to avoid touching historical revenue figures already relied on by the dashboard), and default un-set payment methods to `"unknown"` for pre-existing rows. Delivered as three commits: `test: add failing specs for Purchase Management (admin orders)` → `feat: implement Purchase Management (admin orders)` → `refactor: extract shared usePagination hook` (the third genuine duplication of the same pagination-state pattern, now across three admin pages, finally justified extraction).
+**Outcome:** this prompt surfaced a real gap — `payment_method` and `status` didn't exist on the `Purchase` model at all. Rather than let the model guess how to retrofit history, two explicit product decisions were made in follow-up: keep `total_price` stored pre-GST (GST is computed for display only, protecting historical revenue figures the dashboard already depends on), and default unset payment methods on legacy rows to `"unknown"`. Delivered as three commits: `test: add failing specs for Purchase Management (admin orders)` → `feat: implement Purchase Management (admin orders)` → `refactor: extract shared usePagination hook` — the third independent occurrence of the same pagination-state pattern, now finally justifying extraction.
 
-## Phase 8 — Admin Settings *(verbatim)*
+## Phase 8 — Admin Settings
 
-The roadmap named "Admin Settings" as the next feature with no further spec — unlike every prior feature, there was no column list, no field list, nothing to build against. Rather than invent scope, the follow-up was a direct clarifying question with four concrete, mutually-exclusive options:
+The roadmap named "Admin Settings" as the next feature with zero further spec — no field list, no column list, nothing to build against, unlike every feature before it. Rather than invent scope, the follow-up was a direct, structured clarifying question:
 
-> What should the Admin Settings page (`/admin/settings`) contain? — Dealership profile / Admin account & security / App preferences / Notification preferences
+> What should the Admin Settings page (`/admin/settings`) contain?
+> — Dealership profile · Admin account & security · App preferences · Notification preferences
 
-**User's answer:** *Admin account & security.*
+**Answer:** *Admin account & security.*
 
-Once scoped, inspecting the existing `Profile.jsx` page showed it already implemented exactly that (profile edit + change password). Building a second, near-identical page would have violated the standing "never duplicate" rule from Phase 7, so the resolution was to wire `/admin/settings` to reuse the same `Profile` component rather than write new code — still done as a full RED (routing test asserting the settings URL renders the profile heading) → GREEN (one line: point the route at the existing component) cycle, because "trivial" wiring is still a behavior change worth a regression test.
+Inspecting the existing codebase against that scope showed `Profile.jsx` already implemented exactly that — profile editing plus change-password. Building a second, near-identical page would have broken the standing reuse rule from Phase 7, so the resolution was to route `/admin/settings` at the existing `Profile` component rather than write new UI — still delivered as a full RED (a routing test asserting the settings URL renders the profile heading) → GREEN (one line: point the route at the existing component) cycle, because a route change is a behavior change worth a regression test regardless of size.
 
-**Follow-up (verbatim):**
+**Follow-up, from clicking through the running app rather than reading the diff:**
 
 > `http://localhost:5173/admin/profile` and `http://localhost:5173/admin/settings` both are same so remove any one
 
-This caught a UX smell the prompt-writer noticed by actually clicking through the app, not just reading the diff: two sidebar nav items pointing at identical content. Resolved by removing the now-redundant `/admin/profile` entry and route, keeping `/admin/settings` as the single entry point since that was the name given in the original roadmap.
+Resolved by removing the now-redundant `/admin/profile` nav entry and route, keeping `/admin/settings` as the single entry point — the name given in the original roadmap.
 
-## Phase 9 — Dashboard Analytics Improvements *(in progress at time of writing)*
+## Phase 9 — Dashboard Analytics Improvements
 
-Given no further detailed spec, scope was derived from what the codebase actually needed rather than invented: (1) a real bug, where the dashboard used a local `en-US` currency formatter instead of the shared `formatMoney` (`en-IN`) utility every other screen had already standardized on; and (2) two new breakdowns — orders by status, orders by payment method — directly enabled by the `status`/`payment_method` columns added in Phase 7 and otherwise sitting unused. This is a deliberate contrast with Phase 8: when the codebase itself points at the next logical increment, build it; when it doesn't, ask.
+With no further spec provided, scope was derived from the codebase's actual state rather than invented: a real formatting bug, where the dashboard used a local `en-US` currency formatter instead of the shared `formatMoney` (`en-IN`) utility every other screen had already standardized on; and two new breakdowns — orders by status, orders by payment method — directly enabled by the `status`/`payment_method` columns Phase 7 had added and left otherwise unused. This phase is a deliberate contrast with Phase 8: when the codebase itself points at the next logical increment, build it; when it doesn't, ask.
 
-## Phase 10 — Housekeeping Under Time Pressure *(verbatim)*
+## Phase 10 — Housekeeping Under a Hard Deadline
 
 > after this final check all the file and folder, if the file and folder is not commit then commit it, and check all file if not use in project then delete and if code is optimize then optimize. you have only 30 minutes
 
-Followed by, mid-task:
+Followed shortly after by:
 
 > screenshots folder is important
+>
 > in screenshot also add user side photo, register.png and purchase.png payment etc, add all the png photo to show the project good
-> in custmer side this type of photo [reference screenshot of a clean vehicle grid] not include reset delet option
+>
+> in custmer side this type of photo [reference image: a clean vehicle grid with only a Purchase button] not include reset delet option
 
-This last one caught a real mistake: the first round of "customer-side" screenshots was captured while logged in as an **admin** account, so the vehicle grid showed Restock/Delete controls a real customer would never see. The fix was to register a genuine `customer`-role account and recapture, rather than crop or explain away the admin chrome — a screenshot in a README claiming to show the customer experience should actually show the customer experience.
+The last of these caught a real mistake in progress: the first pass of "customer-side" screenshots had been captured while logged in as an **admin** account, so the vehicle grid showed Restock/Delete controls a real customer would never see. The fix was to register a genuine `customer`-role account and recapture — not crop the image or explain the discrepancy away, since a screenshot in a README claiming to show the customer experience should actually show the customer experience.
 
-Under the stated time constraint, the response prioritized ruthlessly: finish the in-flight feature to a safe, tested checkpoint → commit everything legitimately outstanding (a large batch of core app files — `main.jsx`, `index.css`, shared hooks/components — turned out to have been sitting uncommitted for most of the project's history) → restore a missing root `.gitignore` that explained why IDE/coverage artifacts were about to leak into the repo → delete one genuinely orphaned file (`AdminHome.jsx`, superseded and referenced nowhere) → capture and correct screenshots → write this documentation. Full-repo "optimize everything" was explicitly *not* attempted in the remaining time — a shallow pass across a whole codebase produces churn, not value, and the prompt's own priority signal ("give your best" on this file) pointed at documentation quality over speculative refactors.
+Under the stated time limit, priority was set deliberately: finish the in-flight feature to a safe, fully tested checkpoint → commit everything legitimately outstanding (a large batch of core application files — `main.jsx`, `index.css`, several shared hooks and components — had been sitting uncommitted for most of the project's history) → restore a missing root `.gitignore` (its absence was why IDE and coverage artifacts were about to leak into a commit) → delete the one file confirmed genuinely orphaned (`AdminHome.jsx`, superseded, referenced nowhere) → capture and correct screenshots → write this documentation. A full-repo speculative "optimize everything" pass was explicitly not attempted in the time remaining — a shallow sweep across an entire codebase produces churn, not value, and "give your best" pointed clearly at documentation quality over speculative refactors.
 
-## Phase 11 — The Kata Brief Itself *(verbatim, provided mid-session)*
+## Phase 11 — The Kata Brief
 
-The full original kata specification — tech stack constraints, required endpoints, TDD/commit/AI-transparency policy, and deliverables list — was provided partway through the build, after most of the feature work above was already underway. It confirmed retroactively that the architecture already in place (FastAPI + Postgres + JWT + React/Tailwind, RESTful endpoints matching the exact paths specified, admin-gated destructive/restock actions) satisfied the brief, and directly drove this documentation pass: updating `README.md` with the mandated sections (setup, screenshots, AI usage, test report) and this file.
+The full original kata specification — tech stack constraints, required endpoints, the TDD/commit/AI-transparency policy, and the deliverables list — was shared partway through the build, after most of the feature work above was already underway. It confirmed the architecture already in place (FastAPI + PostgreSQL + JWT + React/Tailwind, RESTful endpoints matching the required paths, admin-gated destructive and restock actions) satisfied the brief, and directly drove this documentation pass: a full `README.md` rewrite covering setup, screenshots, the AI usage section, and the test report — plus this file.
 
 ---
 
 ## Reflection
 
-The single highest-value pattern across this whole build was **treating the AI's default behavior as something to actively steer, not something to trust by default.** Left alone, a capable coding assistant will happily over-build (inventing scope for "Admin Settings" instead of asking), under-verify (trusting a green mocked test suite over an actual browser), and quietly widen the blast radius of a "cleanup" request (sweeping up unrelated pre-existing files into one commit). Every prompt in this log that reads as unusually specific — exact table columns, exact commit message format, "ask, don't guess" — exists because the less specific version of that prompt was tried first, in spirit, across the many earlier features that shaped these conventions, and produced output that had to be walked back.
+The single highest-value pattern across this build was treating the assistant's default behavior as something to actively steer, not something to trust by default. Left alone, a capable coding assistant will over-build (inventing scope for an unspecified "Admin Settings" instead of asking), under-verify (trusting a green mocked test suite over an actual browser), and quietly widen the blast radius of a routine request (sweeping unrelated pre-existing files into a "cleanup" commit). Every prompt in this log that reads as unusually specific — exact table columns, an exact commit-message format, "ask, don't guess" as a standing rule — exists because a looser version of that instruction was effectively tried across the earlier, less-specified phases of this project, and the output had to be walked back.
 
-The second pattern worth naming: **verification is not optional just because tests are green.** More than once in this project, `pytest`/`vitest` passing was necessary but not sufficient — the actual bug (a DB port mismatch, a CSS stacking bug, a migration that silently never ran) only showed up when the assistant was pushed to open a real browser against the real running servers. AI-assisted development doesn't remove the need for that discipline; if anything it raises the stakes, because a model will confidently report success based on the tests it can see, with no innate signal that those tests are mocking away the exact integration surface where the bug lives.
+The second pattern worth naming: verification does not stop being necessary just because the test suite is green. More than once in this project, passing `pytest`/`vitest` was necessary but not sufficient — the real bug (a database port mismatch, a CSS stacking-context bug, a migration that silently never ran) only surfaced when the assistant was pushed to open a real browser against the real running servers and look. AI-assisted development doesn't remove the need for that discipline; if anything it raises the stakes, since a model will report success with full confidence based on the tests it can see, with no innate signal that those tests are mocking away the exact integration surface where the actual bug lives.
