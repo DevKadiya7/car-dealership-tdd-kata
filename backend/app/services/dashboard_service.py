@@ -18,3 +18,15 @@ class DashboardService:
 
     def get_top_selling(self):
         return self.dashboard_repository.get_top_selling()
+
+    def get_sales_by_category(self):
+        return self.dashboard_repository.get_sales_by_category()
+
+    def get_monthly_sales(self):
+        return self.dashboard_repository.get_monthly_sales()
+
+    def get_orders_by_status(self):
+        return self.dashboard_repository.get_orders_by_status()
+
+    def get_orders_by_payment_method(self):
+        return self.dashboard_repository.get_orders_by_payment_method()

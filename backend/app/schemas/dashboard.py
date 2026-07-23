@@ -54,3 +54,17 @@ class MonthlySalesOut(BaseModel):
     total_purchases: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OrdersByStatusOut(BaseModel):
+    status: str
+    count: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrdersByPaymentMethodOut(BaseModel):
+    payment_method: str
+    count: int
+
+    model_config = ConfigDict(from_attributes=True)

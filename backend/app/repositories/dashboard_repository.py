@@ -105,6 +105,25 @@ class DashboardRepository:
             for row in rows
         ]
 
+    def get_orders_by_status(self):
+        rows = (
+            self.db.query(Purchase.status, func.count(Purchase.id))
+            .group_by(Purchase.status)
+            .all()
+        )
+        return [{"status": status, "count": count} for status, count in rows]
+
+    def get_orders_by_payment_method(self):
+        rows = (
+            self.db.query(Purchase.payment_method, func.count(Purchase.id))
+            .group_by(Purchase.payment_method)
+            .all()
+        )
+        return [
+            {"payment_method": payment_method or "unknown", "count": count}
+            for payment_method, count in rows
+        ]
+
     def get_monthly_sales(self):
         purchases = self.db.query(Purchase).all()
         grouped = defaultdict(lambda: {"total_purchases": 0, "revenue": Decimal("0.00")})
