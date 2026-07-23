@@ -208,3 +208,99 @@ def test_register_without_accepting_terms_returns_422(client):
     response = client.post("/api/auth/register", json=payload)
 
     assert response.status_code == 422
+
+
+# --- Phase 4: customer profile (PATCH /api/auth/me, change password) ------
+
+
+def _register_and_login(client, **overrides):
+    payload = {**VALID_REGISTRATION_PAYLOAD, **overrides}
+    client.post("/api/auth/register", json=payload)
+    token = client.post(
+        "/api/auth/login", json={"email": payload["email"], "password": payload["password"]}
+    ).json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_update_profile_updates_first_and_last_name(client):
+    headers = _register_and_login(client, email="profile1@example.com")
+
+    response = client.patch(
+        "/api/auth/me", json={"first_name": "Janet", "last_name": "Smith"}, headers=headers
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["first_name"] == "Janet"
+    assert body["last_name"] == "Smith"
+
+
+def test_update_profile_updates_avatar_url(client):
+    headers = _register_and_login(client, email="profile2@example.com")
+
+    response = client.patch(
+        "/api/auth/me",
+        json={"avatar_url": "https://example.com/avatar.jpg"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["avatar_url"] == "https://example.com/avatar.jpg"
+
+
+def test_update_profile_with_invalid_mobile_returns_422(client):
+    headers = _register_and_login(client, email="profile3@example.com")
+
+    response = client.patch(
+        "/api/auth/me", json={"mobile_number": "not-a-number"}, headers=headers
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_profile_requires_authentication(client):
+    response = client.patch("/api/auth/me", json={"first_name": "Janet"})
+
+    assert response.status_code == 401
+
+
+def test_change_password_with_correct_current_password_succeeds(client):
+    headers = _register_and_login(client, email="pwchange1@example.com", password="OldPassw0rd!")
+
+    response = client.post(
+        "/api/auth/change-password",
+        json={"current_password": "OldPassw0rd!", "new_password": "NewPassw0rd!"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+    login_response = client.post(
+        "/api/auth/login",
+        json={"email": "pwchange1@example.com", "password": "NewPassw0rd!"},
+    )
+    assert login_response.status_code == 200
+
+
+def test_change_password_with_wrong_current_password_returns_401(client):
+    headers = _register_and_login(client, email="pwchange2@example.com", password="OldPassw0rd!")
+
+    response = client.post(
+        "/api/auth/change-password",
+        json={"current_password": "WrongPassword1", "new_password": "NewPassw0rd!"},
+        headers=headers,
+    )
+
+    assert response.status_code == 401
+
+
+def test_change_password_with_weak_new_password_returns_422(client):
+    headers = _register_and_login(client, email="pwchange3@example.com", password="OldPassw0rd!")
+
+    response = client.post(
+        "/api/auth/change-password",
+        json={"current_password": "OldPassw0rd!", "new_password": "weak"},
+        headers=headers,
+    )
+
+    assert response.status_code == 422
