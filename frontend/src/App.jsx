@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
+import AdminCustomers from "./pages/AdminCustomers";
 
 export default function App() {
   return (
@@ -54,6 +55,7 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="vehicles" element={<AdminInventory />} />
+            <Route path="customers" element={<AdminCustomers />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>

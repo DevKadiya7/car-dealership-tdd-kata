@@ -2,8 +2,9 @@
 authorization."""
 import enum
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, String, Enum as SAEnum
+from sqlalchemy import Boolean, Column, DateTime, String, Enum as SAEnum
 
 from app.database import Base, GUID
 
@@ -35,3 +36,7 @@ class User(Base):
     postal_code = Column(String, nullable=True)
     terms_accepted = Column(Boolean, nullable=True)
     avatar_url = Column(String, nullable=True)
+
+    # Admin customer-management fields, added in Phase 4.
+    created_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc))
+    is_active = Column(Boolean, nullable=True, default=True)

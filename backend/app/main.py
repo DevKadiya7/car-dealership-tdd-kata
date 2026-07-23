@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import auth, vehicles, purchase
+from app.routers import auth, vehicles, purchase, customers
 from app.routers.dashboard import router as dashboard_router
 
 # Create tables on startup. In a real deployment this is normally replaced
@@ -26,6 +26,7 @@ app.include_router(auth.router)
 app.include_router(vehicles.router)
 app.include_router(purchase.router)
 app.include_router(dashboard_router)
+app.include_router(customers.router)
 
 
 @app.get("/health")

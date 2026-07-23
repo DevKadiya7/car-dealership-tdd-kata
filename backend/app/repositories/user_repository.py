@@ -1,8 +1,13 @@
 """Data-access layer for User. Keeping raw queries here means services
 never touch SQLAlchemy directly, which makes them easy to unit test."""
+import uuid
+from decimal import Decimal
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.models.purchase import Purchase
+from app.models.user import User, UserRole
 
 
 class UserRepository:
@@ -11,6 +16,9 @@ class UserRepository:
 
     def get_by_email(self, email: str) -> User | None:
         return self.db.query(User).filter(User.email == email).first()
+
+    def get_by_id(self, user_id: uuid.UUID) -> User | None:
+        return self.db.query(User).filter(User.id == user_id).first()
 
     def create(
         self,
@@ -53,3 +61,21 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def list_customers_with_stats(self) -> list[dict]:
+        rows = (
+            self.db.query(
+                User,
+                func.count(Purchase.id).label("total_purchases"),
+                func.coalesce(func.sum(Purchase.total_price), Decimal("0.00")).label("total_spent"),
+            )
+            .outerjoin(Purchase, Purchase.user_id == User.id)
+            .filter(User.role == UserRole.CUSTOMER)
+            .group_by(User.id)
+            .all()
+        )
+        return [{"user": row[0], "total_purchases": row[1], "total_spent": row[2]} for row in rows]
+
+    def delete(self, user: User) -> None:
+        self.db.delete(user)
+        self.db.commit()
