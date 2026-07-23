@@ -20,7 +20,16 @@ class User(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
-    role = Column(SAEnum(UserRole), nullable=False, default=UserRole.CUSTOMER)
+    # values_callable forces SQLAlchemy to send the enum *values* ("customer",
+    # "admin") to Postgres, not the member *names* ("CUSTOMER", "ADMIN") it
+    # uses by default - the userrole enum type (see the initial migration)
+    # was created with the lowercase values, and the API/frontend contract
+    # is lowercase too.
+    role = Column(
+        SAEnum(UserRole, values_callable=lambda role_cls: [member.value for member in role_cls]),
+        nullable=False,
+        default=UserRole.CUSTOMER,
+    )
 
     # Profile fields added in Phase 4. Columns are nullable at the DB level
     # (safe to add via migration on a non-empty table) even though
