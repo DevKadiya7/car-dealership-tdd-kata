@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { listCustomers, setCustomerStatus, deleteCustomer } from "../api/customers";
 import { Th, Td } from "../components/Table";
 import Pagination from "../components/Pagination";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import { useAsyncList } from "../hooks/useAsyncList";
+import { usePagination } from "../hooks/usePagination";
 import { formatMoney } from "../utils/vehicle";
 
 const PAGE_SIZE = 9;
@@ -22,7 +23,6 @@ export default function AdminCustomers() {
   } = useAsyncList(listCustomers, "Couldn't load customers. Is the backend running?");
   const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
   const [viewingCustomer, setViewingCustomer] = useState(null);
 
   const filteredCustomers = useMemo(() => {
@@ -33,12 +33,10 @@ export default function AdminCustomers() {
     );
   }, [customers, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / PAGE_SIZE));
-  const pageCustomers = filteredCustomers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [customers, search]);
+  const { page, setPage, totalPages, pageItems: pageCustomers } = usePagination(filteredCustomers, PAGE_SIZE, [
+    customers,
+    search,
+  ]);
 
   const replaceCustomer = (updated) => {
     setCustomers((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));

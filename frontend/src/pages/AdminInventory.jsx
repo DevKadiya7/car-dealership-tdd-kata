@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   listVehicles,
   searchVehicles,
@@ -13,6 +13,7 @@ import Pagination from "../components/Pagination";
 import Loader from "../components/Loader";
 import { Th, Td } from "../components/Table";
 import { useAsyncList } from "../hooks/useAsyncList";
+import { usePagination } from "../hooks/usePagination";
 import { CATEGORY_LABELS, formatPrice, SORT_OPTIONS, sortVehicles } from "../utils/vehicle";
 
 const PAGE_SIZE = 8;
@@ -45,7 +46,6 @@ export default function AdminInventory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [stockFilter, setStockFilter] = useState("");
-  const [page, setPage] = useState(1);
 
   const handleSearch = async (filters) => {
     setLoading(true);
@@ -68,12 +68,11 @@ export default function AdminInventory() {
     () => sortVehicles(filteredVehicles, sortBy),
     [filteredVehicles, sortBy]
   );
-  const totalPages = Math.max(1, Math.ceil(sortedVehicles.length / PAGE_SIZE));
-  const pageVehicles = sortedVehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [vehicles, sortBy, stockFilter]);
+  const { page, setPage, totalPages, pageItems: pageVehicles } = usePagination(sortedVehicles, PAGE_SIZE, [
+    vehicles,
+    sortBy,
+    stockFilter,
+  ]);
 
   const replaceVehicle = (updated) => {
     setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
