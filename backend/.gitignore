@@ -1,24 +1,10 @@
 __pycache__/
-*.py[cod]
-*.db
-.pytest_cache/
-.venv/
-# Python
-__pycache__/
 *.pyc
 .env
+venv/
 .venv/
-
-# VS Code
-.vscode/
-
-# Node
-node_modules/
-
-# Build
-dist/
-build/
-
-# OS
-.DS_Store
-Thumbs.db
+*.db
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/

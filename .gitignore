@@ -1,24 +1,17 @@
 node_modules/
 __pycache__/
-.env
-.pytest_cache/
-dist/
-build/
-# Python
-__pycache__/
 *.pyc
 .env
 .venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
 
 # VS Code
 .vscode/
-
-# Node
-node_modules/
-
-# Build
-dist/
-build/
 
 # OS
 .DS_Store
