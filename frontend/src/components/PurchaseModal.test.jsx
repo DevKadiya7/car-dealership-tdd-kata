@@ -38,10 +38,10 @@ describe("PurchaseModal", () => {
     expect(screen.getByText(/jane doe/i)).toBeInTheDocument();
     expect(screen.getByText(/jane\.doe@example\.com/i)).toBeInTheDocument();
     expect(screen.getByText(/toyota corolla/i)).toBeInTheDocument();
-    expect(screen.getByText("$20,000.00")).toBeInTheDocument();
+    expect(screen.getByText("₹20,000.00")).toBeInTheDocument();
     expect(screen.getByText(/gst \(18%\)/i)).toBeInTheDocument();
-    expect(screen.getByText("$3,600.00")).toBeInTheDocument();
-    expect(screen.getByText("$23,600.00")).toBeInTheDocument();
+    expect(screen.getByText("₹3,600.00")).toBeInTheDocument();
+    expect(screen.getByText("₹23,600.00")).toBeInTheDocument();
   });
 
   it("defaults to Credit Card and shows the card fields", () => {

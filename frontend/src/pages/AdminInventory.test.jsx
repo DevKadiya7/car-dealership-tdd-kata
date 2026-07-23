@@ -76,7 +76,7 @@ describe("AdminInventory", () => {
     expect(await screen.findByText(/Honda Civic/i)).toBeInTheDocument();
     expect(screen.getByText(/Mazda CX-5/i)).toBeInTheDocument();
     expect(screen.getByText(/Nissan Leaf/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$24,000/)).toBeInTheDocument();
+    expect(screen.getByText(/₹24,000/)).toBeInTheDocument();
     const table = screen.getByRole("table");
     expect(within(table).getByText(/Low Stock/i)).toBeInTheDocument();
     expect(within(table).getByText(/Sold Out/i)).toBeInTheDocument();
