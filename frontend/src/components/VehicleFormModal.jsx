@@ -72,7 +72,7 @@ export default function VehicleFormModal({ vehicle, onSave, onClose }) {
   };
 
   return (
-    <Modal>
+    <Modal onClose={onClose}>
       <div className="plate w-full max-w-md p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-ink">

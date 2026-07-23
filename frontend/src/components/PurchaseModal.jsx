@@ -90,7 +90,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const invoiceDate = new Date().toLocaleDateString();
 
   return (
-    <Modal>
+    <Modal onClose={onClose}>
       <div className="plate max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         {step === "form" && (
           <>
