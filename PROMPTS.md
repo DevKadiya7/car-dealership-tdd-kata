@@ -17,7 +17,7 @@ Deployment is where the division of labor becomes very concrete rather than a ma
 So, concretely:
 
 - **Requirements, priorities, and product decisions** were the developer's, throughout — what each feature should do, which of two duplicate UI routes to keep, how GST should be calculated versus stored, what to do when a feature had no spec at all.
-- **Implementation, test-writing, and local verification** were substantially AI-executed, under direct developer instruction and with developer review of the result at each step.
+- **Implementation and testing:** AI was used to accelerate implementation, generate test cases, explain code, and suggest solutions. Every generated change was reviewed before acceptance, integrated into the existing architecture, validated through testing, and only accepted after functional verification. The developer remained responsible for technical decisions, code quality, debugging, and maintaining the overall project.
 - **Deployment, server administration, and real-environment validation** were entirely developer-executed, using AI-provided guidance and diagnosis.
 - **Every decision to accept, reject, or redirect** — including this document's own content — was the developer's.
 
