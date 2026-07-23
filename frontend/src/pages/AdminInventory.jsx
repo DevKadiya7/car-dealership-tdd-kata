@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   listVehicles,
   searchVehicles,
@@ -12,6 +12,7 @@ import VehicleFormModal from "../components/VehicleFormModal";
 import Pagination from "../components/Pagination";
 import Loader from "../components/Loader";
 import { Th, Td } from "../components/Table";
+import { useAsyncList } from "../hooks/useAsyncList";
 import { CATEGORY_LABELS, formatPrice, SORT_OPTIONS, sortVehicles } from "../utils/vehicle";
 
 const PAGE_SIZE = 8;
@@ -30,32 +31,21 @@ function stockStatus(vehicle) {
 }
 
 export default function AdminInventory() {
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+  const {
+    data: vehicles,
+    setData: setVehicles,
+    loading,
+    setLoading,
+    errorMsg,
+    setErrorMsg,
+    reload: load,
+  } = useAsyncList(listVehicles, "Couldn't load the inventory. Is the backend running?");
   const [busyId, setBusyId] = useState(null);
   const [modalVehicle, setModalVehicle] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [page, setPage] = useState(1);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErrorMsg("");
-    try {
-      const data = await listVehicles();
-      setVehicles(data);
-    } catch {
-      setErrorMsg("Couldn't load the inventory. Is the backend running?");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const handleSearch = async (filters) => {
     setLoading(true);

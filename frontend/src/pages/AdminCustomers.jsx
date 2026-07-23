@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { listCustomers, setCustomerStatus, deleteCustomer } from "../api/customers";
 import { Th, Td } from "../components/Table";
 import Pagination from "../components/Pagination";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
+import { useAsyncList } from "../hooks/useAsyncList";
 import { formatMoney } from "../utils/vehicle";
 
 const PAGE_SIZE = 9;
@@ -13,30 +14,16 @@ function customerName(customer) {
 }
 
 export default function AdminCustomers() {
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+  const {
+    data: customers,
+    setData: setCustomers,
+    loading,
+    errorMsg,
+  } = useAsyncList(listCustomers, "Couldn't load customers. Is the backend running?");
   const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [viewingCustomer, setViewingCustomer] = useState(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErrorMsg("");
-    try {
-      const data = await listCustomers();
-      setCustomers(data);
-    } catch {
-      setErrorMsg("Couldn't load customers. Is the backend running?");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const filteredCustomers = useMemo(() => {
     const query = search.trim().toLowerCase();
