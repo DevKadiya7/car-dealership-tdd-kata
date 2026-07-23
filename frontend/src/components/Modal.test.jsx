@@ -1,4 +1,6 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
 import Modal from "./Modal";
 
 describe("Modal", () => {
@@ -16,5 +18,31 @@ describe("Modal", () => {
 
     expect(ancestor.contains(content)).toBe(false);
     expect(document.body.contains(content)).toBe(true);
+  });
+
+  it("calls onClose when the backdrop is clicked", async () => {
+    const onClose = vi.fn();
+    render(
+      <Modal onClose={onClose}>
+        <p>Modal content</p>
+      </Modal>
+    );
+
+    await userEvent.click(screen.getByTestId("modal-backdrop"));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onClose when clicking inside the modal content", async () => {
+    const onClose = vi.fn();
+    render(
+      <Modal onClose={onClose}>
+        <p>Modal content</p>
+      </Modal>
+    );
+
+    await userEvent.click(screen.getByText(/modal content/i));
+
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
