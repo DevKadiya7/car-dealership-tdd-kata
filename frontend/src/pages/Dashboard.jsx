@@ -11,14 +11,15 @@ import {
 import SearchBar from "../components/SearchBar";
 import VehicleCard from "../components/VehicleCard";
 import VehicleFormModal from "../components/VehicleFormModal";
-import Loader from "../components/Loader";
 import Pagination from "../components/Pagination";
-import { SORT_OPTIONS, sortVehicles } from "../utils/vehicle";
+import { SORT_OPTIONS, sortVehicles, CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
 
 const PAGE_SIZE = 9;
 
+const FEATURED_COUNT = 3;
+
 export default function Dashboard() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -63,6 +64,11 @@ export default function Dashboard() {
     return { total, available: total - soldOut, soldOut };
   }, [vehicles]);
 
+  const featuredVehicles = useMemo(
+    () => vehicles.filter((v) => v.quantity > 0).slice(0, FEATURED_COUNT),
+    [vehicles]
+  );
+
   const sortedVehicles = useMemo(() => sortVehicles(vehicles, sortBy), [vehicles, sortBy]);
   const totalPages = Math.max(1, Math.ceil(sortedVehicles.length / PAGE_SIZE));
   const pageVehicles = sortedVehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -100,6 +106,28 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mb-6">
+        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-amber">
+          Welcome back{user?.first_name ? `, ${user.first_name}` : ""}
+        </p>
+        <p className="font-mono text-sm text-muted">
+          Explore today&rsquo;s best picks from the showroom floor.
+        </p>
+      </div>
+
+      {!loading && featuredVehicles.length > 0 && (
+        <div className="mb-8" data-testid="featured-vehicles">
+          <h2 className="mb-3 font-display text-xl font-bold uppercase tracking-tight text-ink">
+            Featured Vehicles
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {featuredVehicles.map((vehicle) => (
+              <FeaturedCard key={vehicle.id} vehicle={vehicle} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Gauge-style stat strip */}
       <div className="mb-6 grid grid-cols-3 divide-x divide-hairline overflow-hidden rounded-sm border border-hairline">
         <Stat label="Total" value={stats.total} />
@@ -153,14 +181,25 @@ export default function Dashboard() {
       )}
 
       {loading ? (
-        <Loader label="Fetching inventory" />
+        <div
+          role="status"
+          aria-label="Loading vehicles"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {Array.from({ length: PAGE_SIZE }, (_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : vehicles.length === 0 ? (
         <div className="plate p-10 text-center">
           <p className="font-mono text-sm text-muted">No vehicles match right now. Try a different search.</p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            data-testid="vehicle-grid"
+            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {pageVehicles.map((vehicle) => (
               <VehicleCard
                 key={vehicle.id}
@@ -197,6 +236,46 @@ function Stat({ label, value, tone = "text-ink" }) {
     <div className="bg-surface px-5 py-4">
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
       <p className={`font-mono text-2xl font-semibold ${tone}`}>{String(value).padStart(2, "0")}</p>
+    </div>
+  );
+}
+
+function FeaturedCard({ vehicle }) {
+  return (
+    <div className="plate flex items-center gap-3 overflow-hidden p-3 transition-transform hover:-translate-y-0.5">
+      {vehicle.image_url ? (
+        <img
+          src={vehicle.image_url}
+          alt={`${vehicle.make} ${vehicle.model}`}
+          className="h-14 w-20 shrink-0 rounded-sm object-cover"
+        />
+      ) : (
+        <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-sm bg-raised font-mono text-[9px] uppercase text-muted">
+          No Image
+        </div>
+      )}
+      <div className="min-w-0">
+        <p className="font-mono text-[10px] uppercase tracking-wide text-amber">
+          {CATEGORY_LABELS[vehicle.category] || vehicle.category}
+        </p>
+        <h4 className="truncate font-display text-lg font-bold uppercase leading-none tracking-tight text-ink">
+          {vehicle.make} {vehicle.model}
+        </h4>
+        <p className="font-mono text-xs text-muted">{formatPrice(vehicle.price)}</p>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="plate animate-pulse overflow-hidden">
+      <div className="h-44 w-full bg-raised" />
+      <div className="space-y-3 p-5">
+        <div className="h-6 w-2/3 rounded-sm bg-raised" />
+        <div className="h-4 w-1/3 rounded-sm bg-raised" />
+        <div className="h-10 w-full rounded-sm bg-raised" />
+      </div>
     </div>
   );
 }
