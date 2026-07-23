@@ -73,7 +73,14 @@ export default function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="plate absolute right-0 top-full z-10 mt-2 min-w-[10rem] p-2">
+                  <div className="plate absolute right-0 top-full z-10 mt-2 min-w-[10rem] space-y-1 p-2">
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="block rounded-sm border border-hairline px-3 py-1.5 text-center font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:border-amber hover:text-amber"
+                    >
+                      Profile
+                    </Link>
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -98,6 +105,13 @@ export default function Navbar() {
               Admin
             </span>
           )}
+          <Link
+            to="/profile"
+            onClick={() => setMenuOpen(false)}
+            className="w-fit font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:text-ink"
+          >
+            Profile
+          </Link>
           <button
             type="button"
             onClick={handleLogout}

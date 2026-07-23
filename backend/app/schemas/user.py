@@ -9,6 +9,12 @@ from app.models.user import UserRole
 MOBILE_NUMBER_PATTERN = re.compile(r"^\+?\d{10,15}$")
 
 
+def validate_password_strength(value: str) -> str:
+    if len(value) < 8 or not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
+        raise ValueError("Password must be at least 8 characters and include a letter and a digit")
+    return value
+
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -32,11 +38,7 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def password_strength(cls, value: str) -> str:
-        if len(value) < 8 or not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
-            raise ValueError(
-                "Password must be at least 8 characters and include a letter and a digit"
-            )
-        return value
+        return validate_password_strength(value)
 
     @field_validator("mobile_number")
     @classmethod
@@ -65,5 +67,32 @@ class UserOut(BaseModel):
     state: str | None = None
     country: str | None = None
     postal_code: str | None = None
+    avatar_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    mobile_number: str | None = None
+    address: str | None = None
+    city: str | None = None
+    state: str | None = None
+    country: str | None = None
+    postal_code: str | None = None
+    avatar_url: str | None = None
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def not_blank_if_provided(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("This field cannot be blank")
+        return value
+
+    @field_validator("mobile_number")
+    @classmethod
+    def mobile_format_if_provided(cls, value: str | None) -> str | None:
+        if value is not None and not MOBILE_NUMBER_PATTERN.match(value):
+            raise ValueError("Mobile number must be 10-15 digits, with an optional leading +")
+        return value

@@ -34,3 +34,4 @@ class User(Base):
     country = Column(String, nullable=True)
     postal_code = Column(String, nullable=True)
     terms_accepted = Column(Boolean, nullable=True)
+    avatar_url = Column(String, nullable=True)

@@ -45,3 +45,11 @@ class UserRepository:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def update(self, user: User, **fields) -> User:
+        for key, value in fields.items():
+            if value is not None:
+                setattr(user, key, value)
+        self.db.commit()
+        self.db.refresh(user)
+        return user

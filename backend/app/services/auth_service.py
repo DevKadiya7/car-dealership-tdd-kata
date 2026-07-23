@@ -2,7 +2,7 @@
 SQLAlchemy-session-lifecycle concerns so it's easy to unit test."""
 from app.auth.jwt_handler import create_access_token
 from app.auth.password import hash_password, verify_password
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
 from app.utils.exceptions import DuplicateEmailError, InvalidCredentialsError
 
@@ -48,3 +48,11 @@ class AuthService:
         if user is None or not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError("Invalid email or password")
         return create_access_token(subject=str(user.id))
+
+    def update_profile(self, user: User, **fields):
+        return self.user_repository.update(user, **fields)
+
+    def change_password(self, user: User, current_password: str, new_password: str) -> None:
+        if not verify_password(current_password, user.hashed_password):
+            raise InvalidCredentialsError("Current password is incorrect")
+        self.user_repository.update(user, hashed_password=hash_password(new_password))

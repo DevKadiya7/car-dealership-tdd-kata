@@ -46,10 +46,26 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (fields) => {
+    const { data } = await api.patch("/api/auth/me", fields);
+    localStorage.setItem("user", JSON.stringify(data));
+    setUser(data);
+    return data;
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    await api.post("/api/auth/change-password", {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  }, []);
+
   const isAdmin = user?.role === "admin";
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAdmin, loading, login, register, logout, updateProfile, changePassword }}
+    >
       {children}
     </AuthContext.Provider>
   );
