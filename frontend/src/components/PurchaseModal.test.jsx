@@ -102,7 +102,7 @@ describe("PurchaseModal", () => {
     await userEvent.click(screen.getByRole("button", { name: /confirm purchase/i }));
 
     expect(await screen.findByText(/purchase successful/i)).toBeInTheDocument();
-    expect(purchaseVehicle).toHaveBeenCalledWith("v1");
+    expect(purchaseVehicle).toHaveBeenCalledWith("v1", "credit");
     expect(onSuccess).toHaveBeenCalledWith({ ...vehicle, quantity: 4 });
     expect(screen.getByRole("button", { name: /view invoice/i })).toBeInTheDocument();
   });

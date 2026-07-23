@@ -114,3 +114,71 @@ def test_get_all_purchases_as_admin_returns_purchase_records(client, customer_he
     assert all_purchases_response.status_code == 200
     assert isinstance(all_purchases_response.json(), list)
     assert len(all_purchases_response.json()) >= 1
+
+
+# --- Phase 4: admin purchase management - payment method, status, and ------
+# --- joined customer/vehicle details on the admin purchase list -----------
+
+
+def test_purchase_with_payment_method_is_stored(client, customer_headers, admin_headers):
+    vehicle = client.post(
+        "/api/vehicles",
+        json={"make": "Kia", "model": "Seltos", "category": "suv", "price": "18000.00", "quantity": 3},
+        headers=customer_headers,
+    ).json()
+
+    client.post(
+        f"/api/vehicles/{vehicle['id']}/purchase",
+        json={"payment_method": "upi"},
+        headers=customer_headers,
+    )
+
+    response = client.get("/api/purchases", headers=admin_headers)
+    record = next(p for p in response.json() if p["vehicle_id"] == vehicle["id"])
+    assert record["payment_method"] == "upi"
+
+
+def test_purchase_without_payment_method_is_recorded_as_unknown(client, customer_headers, admin_headers):
+    vehicle = client.post(
+        "/api/vehicles",
+        json={"make": "Nissan", "model": "Magnite", "category": "suv", "price": "9500.00", "quantity": 3},
+        headers=customer_headers,
+    ).json()
+
+    client.post(f"/api/vehicles/{vehicle['id']}/purchase", headers=customer_headers)
+
+    response = client.get("/api/purchases", headers=admin_headers)
+    record = next(p for p in response.json() if p["vehicle_id"] == vehicle["id"])
+    assert record["payment_method"] == "unknown"
+
+
+def test_purchase_status_defaults_to_completed(client, customer_headers, admin_headers):
+    vehicle = client.post(
+        "/api/vehicles",
+        json={"make": "Skoda", "model": "Slavia", "category": "sedan", "price": "13500.00", "quantity": 3},
+        headers=customer_headers,
+    ).json()
+
+    client.post(f"/api/vehicles/{vehicle['id']}/purchase", headers=customer_headers)
+
+    response = client.get("/api/purchases", headers=admin_headers)
+    record = next(p for p in response.json() if p["vehicle_id"] == vehicle["id"])
+    assert record["status"] == "completed"
+
+
+def test_all_purchases_include_customer_and_vehicle_details_for_admin(
+    client, customer_headers, admin_headers
+):
+    vehicle = client.post(
+        "/api/vehicles",
+        json={"make": "MG", "model": "Hector", "category": "suv", "price": "19000.00", "quantity": 3},
+        headers=customer_headers,
+    ).json()
+
+    client.post(f"/api/vehicles/{vehicle['id']}/purchase", headers=customer_headers)
+
+    response = client.get("/api/purchases", headers=admin_headers)
+    record = next(p for p in response.json() if p["vehicle_id"] == vehicle["id"])
+    assert record["vehicle_make"] == "MG"
+    assert record["vehicle_model"] == "Hector"
+    assert record["customer_email"] == "customer@example.com"

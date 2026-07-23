@@ -91,7 +91,7 @@ describe("VehicleDetail page", () => {
     await userEvent.type(screen.getByLabelText(/cvv/i), "123");
     await userEvent.click(screen.getByRole("button", { name: /confirm purchase/i }));
 
-    expect(purchaseVehicle).toHaveBeenCalledWith("v1");
+    expect(purchaseVehicle).toHaveBeenCalledWith("v1", "credit");
     expect(await screen.findByText(/purchase successful/i)).toBeInTheDocument();
   });
 
