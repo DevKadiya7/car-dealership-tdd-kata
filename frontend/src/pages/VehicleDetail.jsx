@@ -13,6 +13,7 @@ export default function VehicleDetail() {
   const [loading, setLoading] = useState(!location.state?.vehicle);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPurchase, setShowPurchase] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,10 +65,11 @@ export default function VehicleDetail() {
       </Link>
 
       <div className="plate overflow-hidden">
-        {vehicle.image_url ? (
+        {vehicle.image_url && !imageError ? (
           <img
             src={vehicle.image_url}
             alt={`${vehicle.make} ${vehicle.model}`}
+            onError={() => setImageError(true)}
             className="h-80 w-full object-cover"
           />
         ) : (

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { vi } from "vitest";
@@ -67,6 +67,15 @@ describe("VehicleDetail page", () => {
         </Routes>
       </MemoryRouter>
     );
+
+    expect(screen.getByText(/no image available/i)).toBeInTheDocument();
+  });
+
+  it("falls back to the placeholder when image_url is present but fails to load", () => {
+    renderDetail({ withState: true });
+
+    const image = screen.getByRole("img", { name: /toyota corolla/i });
+    fireEvent.error(image);
 
     expect(screen.getByText(/no image available/i)).toBeInTheDocument();
   });

@@ -6,6 +6,7 @@ import PurchaseModal from "./PurchaseModal";
 export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, onEdit, onDelete }) {
   const [busy, setBusy] = useState(false);
   const [showPurchase, setShowPurchase] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const outOfStock = vehicle.quantity === 0;
   const lowStock = vehicle.quantity > 0 && vehicle.quantity <= 2;
 
@@ -34,11 +35,12 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
         </span>
       </div>
 
-      {vehicle.image_url ? (
+      {vehicle.image_url && !imageError ? (
         <div className="h-44 w-full overflow-hidden">
           <img
             src={vehicle.image_url}
             alt={`${vehicle.make} ${vehicle.model}`}
+            onError={() => setImageError(true)}
             className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
           />
         </div>

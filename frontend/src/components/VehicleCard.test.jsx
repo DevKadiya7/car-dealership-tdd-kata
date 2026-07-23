@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import VehicleCard from "./VehicleCard";
 
@@ -29,6 +29,15 @@ describe("VehicleCard", () => {
 
   it("renders a fallback placeholder when image_url is missing", () => {
     renderCard({ ...baseVehicle, image_url: null });
+
+    expect(screen.getByText(/no image available/i)).toBeInTheDocument();
+  });
+
+  it("falls back to the placeholder when image_url is present but fails to load", () => {
+    renderCard({ ...baseVehicle, image_url: "https://example.com/broken.jpg" });
+
+    const image = screen.getByRole("img", { name: /toyota corolla/i });
+    fireEvent.error(image);
 
     expect(screen.getByText(/no image available/i)).toBeInTheDocument();
   });
