@@ -39,4 +39,15 @@ describe("App routing", () => {
 
     expect(await screen.findByRole("heading", { name: /Vehicle Management/i })).toBeInTheDocument();
   });
+
+  it("renders the account settings page at /admin/settings", async () => {
+    window.history.pushState({}, "Admin Settings", "/admin/settings");
+    localStorage.setItem("user", JSON.stringify({ email: "admin@company.com", role: "admin" }));
+    localStorage.setItem("access_token", "fake-token");
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: /^Profile$/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Change Password/i })).toBeInTheDocument();
+  });
 });
