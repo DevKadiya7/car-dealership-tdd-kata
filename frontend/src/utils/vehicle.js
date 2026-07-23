@@ -28,6 +28,24 @@ export const SORT_OPTIONS = [
   { value: "stock", label: "Stock Availability" },
 ];
 
+export const GST_RATE = 0.18;
+
+export function formatMoney(amount) {
+  return Number(amount).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+export function calculateTotals(price) {
+  const base = Number(price);
+  const gst = Math.round(base * GST_RATE * 100) / 100;
+  const total = Math.round((base + gst) * 100) / 100;
+  return { base, gst, total };
+}
+
 export function sortVehicles(vehicles, sortBy) {
   const sorted = [...vehicles];
   switch (sortBy) {
