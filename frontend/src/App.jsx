@@ -58,7 +58,6 @@ export default function App() {
             <Route path="vehicles" element={<AdminInventory />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="purchases" element={<AdminOrders />} />
-            <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Profile />} />
           </Route>
         </Routes>
