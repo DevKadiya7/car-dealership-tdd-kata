@@ -169,6 +169,37 @@ def test_admin_can_view_sales_by_category(client, customer_headers, admin_header
     assert categories["Sedan"]["revenue"] == "26000.00"
 
 
+def test_admin_can_view_orders_by_status(client, customer_headers, admin_headers):
+    vehicle = _create_vehicle(client, admin_headers, make="Kia", model="Seltos", category="SUV", price="18000.00", quantity=10)
+
+    _purchase_vehicle(client, customer_headers, vehicle["id"], times=3)
+
+    response = client.get("/api/dashboard/orders-by-status", headers=admin_headers)
+    assert response.status_code == 200
+
+    rows = {item["status"]: item["count"] for item in response.json()}
+    assert rows["completed"] == 3
+
+
+def test_admin_can_view_orders_by_payment_method(client, customer_headers, admin_headers):
+    vehicle_a = _create_vehicle(client, admin_headers, make="Skoda", model="Kushaq", category="SUV", price="20000.00", quantity=5)
+    vehicle_b = _create_vehicle(client, admin_headers, make="VW", model="Taigun", category="SUV", price="21000.00", quantity=5)
+
+    client.post(
+        f"/api/vehicles/{vehicle_a['id']}/purchase",
+        json={"payment_method": "upi"},
+        headers=customer_headers,
+    )
+    client.post(f"/api/vehicles/{vehicle_b['id']}/purchase", headers=customer_headers)
+
+    response = client.get("/api/dashboard/orders-by-payment-method", headers=admin_headers)
+    assert response.status_code == 200
+
+    rows = {item["payment_method"]: item["count"] for item in response.json()}
+    assert rows["upi"] == 1
+    assert rows["unknown"] == 1
+
+
 def test_admin_can_view_monthly_sales(client, customer_headers, admin_headers):
     vehicle = _create_vehicle(
         client,
