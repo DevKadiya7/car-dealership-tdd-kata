@@ -7,12 +7,14 @@ export const CATEGORY_LABELS = {
   hatchback: "Hatchback",
   van: "Van",
   electric: "Electric",
+  luxury: "Luxury",
+  pickup: "Pickup",
 };
 
 export function formatPrice(price) {
-  return Number(price).toLocaleString("en-US", {
+  return Number(price).toLocaleString("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
@@ -31,9 +33,9 @@ export const SORT_OPTIONS = [
 export const GST_RATE = 0.18;
 
 export function formatMoney(amount) {
-  return Number(amount).toLocaleString("en-US", {
+  return Number(amount).toLocaleString("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

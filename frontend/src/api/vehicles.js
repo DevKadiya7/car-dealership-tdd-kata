@@ -9,6 +9,8 @@ export const VEHICLE_CATEGORIES = [
   "hatchback",
   "van",
   "electric",
+  "luxury",
+  "pickup",
 ];
 
 export const listVehicles = () => api.get("/api/vehicles").then((r) => r.data);
