@@ -1,7 +1,7 @@
 """add user profile fields
 
 Revision ID: 0002
-Revises: 0001
+Revises: d5ac98540e9e
 Create Date: 2026-07-22
 """
 import sqlalchemy as sa
@@ -9,7 +9,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0002"
-down_revision = "0001"
+down_revision = "d5ac98540e9e"
 branch_labels = None
 depends_on = None
 
