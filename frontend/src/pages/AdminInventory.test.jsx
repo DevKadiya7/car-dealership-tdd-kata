@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import AdminInventory from "./AdminInventory";
@@ -77,9 +77,10 @@ describe("AdminInventory", () => {
     expect(screen.getByText(/Mazda CX-5/i)).toBeInTheDocument();
     expect(screen.getByText(/Nissan Leaf/i)).toBeInTheDocument();
     expect(screen.getByText(/\$24,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Low Stock/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sold Out/i)).toBeInTheDocument();
-    expect(screen.getByText(/In Stock/i)).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText(/Low Stock/i)).toBeInTheDocument();
+    expect(within(table).getByText(/Sold Out/i)).toBeInTheDocument();
+    expect(within(table).getByText(/In Stock/i)).toBeInTheDocument();
   });
 
   it("creates a new vehicle via the Add Vehicle modal", async () => {
@@ -162,6 +163,52 @@ describe("AdminInventory", () => {
 
     const rows = screen.getAllByRole("row").slice(1);
     expect(rows[0]).toHaveTextContent("Honda Civic");
+  });
+
+  it("shows a thumbnail image in the table when image_url is present", async () => {
+    listVehicles.mockResolvedValue([
+      { ...healthyVehicle, image_url: "https://example.com/civic.jpg" },
+    ]);
+
+    render(<AdminInventory />);
+
+    const thumb = await screen.findByRole("img", { name: /honda civic/i });
+    expect(thumb).toHaveAttribute("src", "https://example.com/civic.jpg");
+  });
+
+  it("shows a fallback placeholder in the table when image_url is missing", async () => {
+    listVehicles.mockResolvedValue([healthyVehicle]);
+
+    render(<AdminInventory />);
+    await screen.findByText(/Honda Civic/i);
+
+    expect(screen.queryByRole("img", { name: /honda civic/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/no image/i)).toBeInTheDocument();
+  });
+
+  it("shows a fallback when the thumbnail image fails to load", async () => {
+    listVehicles.mockResolvedValue([
+      { ...healthyVehicle, image_url: "https://example.com/broken.jpg" },
+    ]);
+
+    render(<AdminInventory />);
+    const thumb = await screen.findByRole("img", { name: /honda civic/i });
+    thumb.dispatchEvent(new Event("error"));
+
+    expect(await screen.findByText(/no image/i)).toBeInTheDocument();
+  });
+
+  it("filters the table by stock status", async () => {
+    listVehicles.mockResolvedValue([healthyVehicle, lowVehicle, soldOutVehicle]);
+
+    render(<AdminInventory />);
+    await screen.findByText(/Honda Civic/i);
+
+    await userEvent.selectOptions(screen.getByLabelText(/stock status/i), "low");
+
+    expect(screen.getByText(/Mazda CX-5/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Honda Civic/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nissan Leaf/i)).not.toBeInTheDocument();
   });
 
   it("paginates when there are more than one page of vehicles", async () => {
