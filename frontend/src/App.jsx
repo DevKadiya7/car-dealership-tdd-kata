@@ -59,6 +59,7 @@ export default function App() {
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="purchases" element={<AdminOrders />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>
