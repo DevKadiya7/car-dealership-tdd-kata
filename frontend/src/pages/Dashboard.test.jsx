@@ -44,10 +44,13 @@ describe("Dashboard sorting and pagination", () => {
     listVehicles.mockResolvedValue(sortTestVehicles);
     renderDashboard();
 
-    await screen.findByText(/Toyota/i);
+    const grid = await screen.findByTestId("vehicle-grid");
+    await within(grid).findByText(/Toyota/i);
     await userEvent.selectOptions(screen.getByLabelText(/sort by/i), "price-asc");
 
-    const makes = screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent);
+    const makes = within(grid)
+      .getAllByRole("heading", { level: 3 })
+      .map((el) => el.textContent);
     expect(makes).toEqual(["Toyota", "Ford", "Porsche"]);
   });
 
@@ -56,28 +59,30 @@ describe("Dashboard sorting and pagination", () => {
     listVehicles.mockResolvedValue(vehicles);
     renderDashboard();
 
-    await screen.findByText(/Make01/i);
-    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(9);
-    expect(screen.queryByText(/Make10/i)).not.toBeInTheDocument();
+    const grid = await screen.findByTestId("vehicle-grid");
+    await within(grid).findByText(/Make01/i);
+    expect(within(grid).getAllByRole("heading", { level: 3 })).toHaveLength(9);
+    expect(within(grid).queryByText(/Make10/i)).not.toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
 
-    expect(await screen.findByText(/Make10/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Make01/i)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
+    expect(await within(grid).findByText(/Make10/i)).toBeInTheDocument();
+    expect(within(grid).queryByText(/Make01/i)).not.toBeInTheDocument();
+    expect(within(grid).getAllByRole("heading", { level: 3 })).toHaveLength(3);
     expect(screen.getByRole("button", { name: /next/i })).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: /previous/i }));
-    expect(await screen.findByText(/Make01/i)).toBeInTheDocument();
+    expect(await within(grid).findByText(/Make01/i)).toBeInTheDocument();
   });
 
   it("does not show pagination controls when everything fits on one page", async () => {
     listVehicles.mockResolvedValue(sortTestVehicles);
     renderDashboard();
 
-    await screen.findByText(/Toyota/i);
+    const grid = await screen.findByTestId("vehicle-grid");
+    await within(grid).findByText(/Toyota/i);
     expect(screen.queryByRole("button", { name: /next/i })).not.toBeInTheDocument();
   });
 
@@ -88,13 +93,59 @@ describe("Dashboard sorting and pagination", () => {
     searchVehicles.mockResolvedValue([sortTestVehicles[0]]);
 
     renderDashboard();
-    await screen.findByText(/Make01/i);
+    let grid = await screen.findByTestId("vehicle-grid");
+    await within(grid).findByText(/Make01/i);
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
-    await screen.findByText(/Make10/i);
+    await within(grid).findByText(/Make10/i);
 
     await userEvent.click(screen.getByRole("button", { name: /^search$/i }));
 
-    expect(await screen.findByText(/Toyota/i)).toBeInTheDocument();
+    grid = await screen.findByTestId("vehicle-grid");
+    expect(await within(grid).findByText(/Toyota/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /next/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("Dashboard welcome, featured vehicles, and skeleton loading", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows a welcome message with the user's first name", async () => {
+    useAuth.mockReturnValue({ isAdmin: false, user: { first_name: "Jane" } });
+    listVehicles.mockResolvedValue(sortTestVehicles);
+
+    renderDashboard();
+
+    expect(await screen.findByText(/welcome back, jane/i)).toBeInTheDocument();
+  });
+
+  it("falls back to a generic welcome message when first name is unavailable", async () => {
+    useAuth.mockReturnValue({ isAdmin: false, user: { email: "jane@example.com" } });
+    listVehicles.mockResolvedValue(sortTestVehicles);
+
+    renderDashboard();
+
+    expect(await screen.findByText(/^welcome back$/i)).toBeInTheDocument();
+  });
+
+  it("shows a featured vehicles section highlighting up to 3 vehicles", async () => {
+    useAuth.mockReturnValue({ isAdmin: false, user: { first_name: "Jane" } });
+    listVehicles.mockResolvedValue(sortTestVehicles);
+
+    renderDashboard();
+
+    expect(await screen.findByRole("heading", { name: /featured vehicles/i })).toBeInTheDocument();
+    const featuredSection = screen.getByTestId("featured-vehicles");
+    expect(within(featuredSection).getAllByText(/toyota|ford|porsche/i).length).toBeGreaterThan(0);
+  });
+
+  it("shows skeleton loading placeholders while vehicles are loading", () => {
+    useAuth.mockReturnValue({ isAdmin: false, user: { first_name: "Jane" } });
+    listVehicles.mockImplementation(() => new Promise(() => {}));
+
+    renderDashboard();
+
+    expect(screen.getByRole("status", { name: /loading vehicles/i })).toBeInTheDocument();
   });
 });
