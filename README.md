@@ -27,7 +27,7 @@ Every feature in this repository was built Red → Green → Refactor, with a ma
 Ironyard Motors is a two-sided application:
 
 - **Customers** register, log in, browse the vehicle showroom (search/filter/sort/paginate), view a vehicle's detail page, and purchase it through a modal that computes GST live and generates a printable invoice.
-- **Admins** get a separate `/admin/*` area: a dashboard with live sales analytics (revenue, top sellers, low stock, sales by category, monthly trend, orders by status/payment method), full vehicle inventory CRUD, customer management (search, enable/disable, delete, profile drill-down), and an order management screen with search/filter/sort/pagination that reuses the same invoice component customers see.
+- **Admins** get a separate `/admin/*` area:The application includes a dedicated **Admin Dashboard** that provides real-time business insights and management tools. After logging in with an administrator account, click the **ADMIN** button in the navigation bar to access the dashboard. A dashboard with live sales analytics (revenue, top sellers, low stock, sales by category, monthly trend, orders by status/payment method), full vehicle inventory CRUD, customer management (search, enable/disable, delete, profile drill-down), and an order management screen with search/filter/sort/pagination that reuses the same invoice component customers see.
 
 Everything is backed by a real PostgreSQL database (via Docker), JWT authentication, and role-based access control (`customer` / `admin`).
 
