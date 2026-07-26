@@ -1,6 +1,6 @@
 import { formatMoney } from "../utils/vehicle";
 
-export default function Invoice({ vehicle, customer, totals, paymentMethod, invoiceNumber, date }) {
+export default function Invoice({ vehicle, customer, totals, paymentMethod, invoiceNumber, date, loan }) {
   return (
     <div className="plate p-6">
       <div className="mb-6 flex items-start justify-between border-b border-dashed border-hairline pb-4">
@@ -53,6 +53,42 @@ export default function Invoice({ vehicle, customer, totals, paymentMethod, invo
           <dd className="text-ink">{paymentMethod}</dd>
         </div>
       </dl>
+
+      {loan && (
+        <div className="mt-6 border-t border-dashed border-hairline pt-4">
+          <p className="mb-3 font-mono text-xs uppercase tracking-wide text-amber">Loan Details</p>
+          <dl className="space-y-2 font-mono text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Down Payment</dt>
+              <dd className="text-ink">{formatMoney(loan.down_payment)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Loan Amount</dt>
+              <dd className="text-ink">{formatMoney(loan.loan_amount)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Duration</dt>
+              <dd className="text-ink">{loan.duration_years} Years</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Interest Rate</dt>
+              <dd className="text-ink">{Number(loan.interest_rate)}%</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Monthly EMI</dt>
+              <dd className="text-ink">{formatMoney(loan.monthly_emi)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Total Interest</dt>
+              <dd className="text-ink">{formatMoney(loan.total_interest)}</dd>
+            </div>
+            <div className="flex items-center justify-between border-t border-hairline pt-2 text-base">
+              <dt className="font-semibold text-ink">Total Amount Payable</dt>
+              <dd className="font-semibold text-amber">{formatMoney(loan.total_payable)}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
 
       <div className="mt-6 flex gap-2 print:hidden">
         <button

@@ -51,7 +51,7 @@ describe("Invoice", () => {
     expect(screen.getByText(/duration/i)).toBeInTheDocument();
     expect(screen.getByText(/5 years/i)).toBeInTheDocument();
     expect(screen.getByText(/interest rate/i)).toBeInTheDocument();
-    expect(screen.getByText(/8%/)).toBeInTheDocument();
+    expect(screen.getByText("8%")).toBeInTheDocument();
     expect(screen.getByText(/monthly emi/i)).toBeInTheDocument();
     expect(screen.getByText("₹14,193.48")).toBeInTheDocument();
     expect(screen.getByText(/total interest/i)).toBeInTheDocument();
