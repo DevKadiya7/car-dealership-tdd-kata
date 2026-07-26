@@ -33,5 +33,34 @@ export function useAsyncList(fetchFn, errorMessage) {
     setData((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
   }, []);
 
-  return { data, setData, loading, setLoading, errorMsg, setErrorMsg, reload: load, replaceItem };
+  // Tracks which row is mid-action (to disable its buttons) for the
+  // duration of an async call - the same "setBusyId, await, clear it in a
+  // finally" shape repeated across every admin list page with row actions
+  // (AdminCustomers, AdminInventory, AdminAdmins, AdminLoans,
+  // AdminServiceBookings) before this was extracted. Doesn't assume what
+  // the action does with the result (replaceItem vs. removing the row),
+  // it just returns/propagates it.
+  const [busyId, setBusyId] = useState(null);
+
+  const runBusyAction = useCallback(async (id, action) => {
+    setBusyId(id);
+    try {
+      return await action();
+    } finally {
+      setBusyId(null);
+    }
+  }, []);
+
+  return {
+    data,
+    setData,
+    loading,
+    setLoading,
+    errorMsg,
+    setErrorMsg,
+    reload: load,
+    replaceItem,
+    busyId,
+    runBusyAction,
+  };
 }
