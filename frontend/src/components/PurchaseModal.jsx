@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { purchaseVehicle } from "../api/vehicles";
+import { createLoan } from "../api/loans";
 import { formatMoney, calculateTotals } from "../utils/vehicle";
+import {
+  ALLOWED_LOAN_DURATIONS,
+  ANNUAL_INTEREST_RATE,
+  calculateInterest,
+  calculateLoanAmount,
+  calculateMinimumDownPayment,
+  calculateMonthlyEMI,
+  calculateTotalPayable,
+} from "../utils/loan";
 import Invoice from "./Invoice";
 import Modal from "./Modal";
 
@@ -25,21 +35,47 @@ function isExpiryInFuture(expiry) {
 export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const { user } = useAuth();
   const [step, setStep] = useState("form");
+  const [paymentType, setPaymentType] = useState("full");
   const [paymentMethod, setPaymentMethod] = useState("credit");
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [downPayment, setDownPayment] = useState(() =>
+    String(calculateMinimumDownPayment(vehicle.price))
+  );
+  const [durationYears, setDurationYears] = useState(5);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [purchasedVehicle, setPurchasedVehicle] = useState(null);
+  const [loanResult, setLoanResult] = useState(null);
 
   const totals = calculateTotals(vehicle.price);
   const customerName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email;
 
+  const vehiclePrice = Number(vehicle.price);
+  const minimumDownPayment = calculateMinimumDownPayment(vehiclePrice);
+  const downPaymentNumber = Number(downPayment) || 0;
+  const loanAmount = calculateLoanAmount(vehiclePrice, downPaymentNumber);
+  const monthlyEmi = calculateMonthlyEMI(loanAmount, ANNUAL_INTEREST_RATE, durationYears);
+  const totalInterest = calculateInterest(monthlyEmi, durationYears, loanAmount);
+  const totalPayable = calculateTotalPayable(downPaymentNumber, loanAmount, totalInterest);
+
   const validate = () => {
+    if (paymentType === "loan") {
+      const errors = {};
+      if (!downPayment) {
+        errors.downPayment = "Down payment is required.";
+      } else if (downPaymentNumber < minimumDownPayment) {
+        errors.downPayment = `Down payment cannot be less than 30% of the vehicle price (${formatMoney(minimumDownPayment)}).`;
+      } else if (downPaymentNumber > vehiclePrice) {
+        errors.downPayment = "Down payment cannot exceed the vehicle price.";
+      }
+      return errors;
+    }
+
     const errors = {};
     if (paymentMethod === "credit" || paymentMethod === "debit") {
       const digits = cardNumber.replace(/\s+/g, "");
@@ -74,12 +110,30 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const updated = await purchaseVehicle(vehicle.id, paymentMethod);
-      setPurchasedVehicle(updated);
-      setStep("success");
-      onSuccess(updated);
+      if (paymentType === "loan") {
+        const created = await createLoan({
+          vehicle_id: vehicle.id,
+          down_payment: downPaymentNumber,
+          duration_years: durationYears,
+        });
+        const updated = { ...vehicle, quantity: vehicle.quantity - 1 };
+        setLoanResult(created);
+        setPurchasedVehicle(updated);
+        setStep("success");
+        onSuccess(updated);
+      } else {
+        const updated = await purchaseVehicle(vehicle.id, paymentMethod);
+        setPurchasedVehicle(updated);
+        setStep("success");
+        onSuccess(updated);
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || "Payment could not be completed. Please try again.");
+      setError(
+        err.response?.data?.detail ||
+          (paymentType === "loan"
+            ? "The loan application could not be submitted. Please try again."
+            : "Payment could not be completed. Please try again.")
+      );
       setStep("failure");
     } finally {
       setSubmitting(false);
@@ -138,75 +192,166 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
             <form onSubmit={handleConfirm} noValidate className="space-y-4">
               <fieldset>
                 <legend className="mb-2 font-mono text-xs uppercase tracking-wide text-muted">
-                  Payment Method
+                  How would you like to pay?
                 </legend>
                 <div className="grid grid-cols-2 gap-2">
-                  {PAYMENT_METHODS.map((method) => (
-                    <label
-                      key={method.value}
-                      className="flex items-center gap-2 rounded-sm border border-hairline px-3 py-2 font-mono text-xs text-muted"
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method.value}
-                        checked={paymentMethod === method.value}
-                        onChange={() => setPaymentMethod(method.value)}
-                        className="accent-amber"
-                      />
-                      {method.label}
-                    </label>
-                  ))}
+                  <label className="flex items-center gap-2 rounded-sm border border-hairline px-3 py-2 font-mono text-xs text-muted">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="full"
+                      checked={paymentType === "full"}
+                      onChange={() => setPaymentType("full")}
+                      className="accent-amber"
+                    />
+                    Full Payment
+                  </label>
+                  <label className="flex items-center gap-2 rounded-sm border border-hairline px-3 py-2 font-mono text-xs text-muted">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="loan"
+                      checked={paymentType === "loan"}
+                      onChange={() => setPaymentType("loan")}
+                      className="accent-amber"
+                    />
+                    Loan
+                  </label>
                 </div>
               </fieldset>
 
-              {(paymentMethod === "credit" || paymentMethod === "debit") && (
-                <div className="space-y-3">
-                  <Field
-                    id="pm-card-number"
-                    label="Card Number"
-                    value={cardNumber}
-                    onChange={setCardNumber}
-                    placeholder="4111 1111 1111 1111"
-                    error={fieldErrors.cardNumber}
-                  />
-                  <Field
-                    id="pm-card-holder"
-                    label="Card Holder"
-                    value={cardHolder}
-                    onChange={setCardHolder}
-                    error={fieldErrors.cardHolder}
-                  />
-                  <div className="grid grid-cols-2 gap-3">
+              {paymentType === "full" && (
+                <>
+                  <fieldset>
+                    <legend className="mb-2 font-mono text-xs uppercase tracking-wide text-muted">
+                      Payment Method
+                    </legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PAYMENT_METHODS.map((method) => (
+                        <label
+                          key={method.value}
+                          className="flex items-center gap-2 rounded-sm border border-hairline px-3 py-2 font-mono text-xs text-muted"
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={method.value}
+                            checked={paymentMethod === method.value}
+                            onChange={() => setPaymentMethod(method.value)}
+                            className="accent-amber"
+                          />
+                          {method.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  {(paymentMethod === "credit" || paymentMethod === "debit") && (
+                    <div className="space-y-3">
+                      <Field
+                        id="pm-card-number"
+                        label="Card Number"
+                        value={cardNumber}
+                        onChange={setCardNumber}
+                        placeholder="4111 1111 1111 1111"
+                        error={fieldErrors.cardNumber}
+                      />
+                      <Field
+                        id="pm-card-holder"
+                        label="Card Holder"
+                        value={cardHolder}
+                        onChange={setCardHolder}
+                        error={fieldErrors.cardHolder}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field
+                          id="pm-expiry"
+                          label="Expiry"
+                          value={expiry}
+                          onChange={setExpiry}
+                          placeholder="MM/YY"
+                          error={fieldErrors.expiry}
+                        />
+                        <Field
+                          id="pm-cvv"
+                          label="CVV"
+                          value={cvv}
+                          onChange={setCvv}
+                          type="password"
+                          error={fieldErrors.cvv}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "upi" && (
                     <Field
-                      id="pm-expiry"
-                      label="Expiry"
-                      value={expiry}
-                      onChange={setExpiry}
-                      placeholder="MM/YY"
-                      error={fieldErrors.expiry}
+                      id="pm-upi"
+                      label="UPI ID"
+                      value={upiId}
+                      onChange={setUpiId}
+                      placeholder="name@bank"
+                      error={fieldErrors.upiId}
                     />
-                    <Field
-                      id="pm-cvv"
-                      label="CVV"
-                      value={cvv}
-                      onChange={setCvv}
-                      type="password"
-                      error={fieldErrors.cvv}
-                    />
-                  </div>
-                </div>
+                  )}
+                </>
               )}
 
-              {paymentMethod === "upi" && (
-                <Field
-                  id="pm-upi"
-                  label="UPI ID"
-                  value={upiId}
-                  onChange={setUpiId}
-                  placeholder="name@bank"
-                  error={fieldErrors.upiId}
-                />
+              {paymentType === "loan" && (
+                <div className="space-y-3">
+                  <Field
+                    id="loan-down-payment"
+                    label="Down Payment"
+                    type="number"
+                    value={downPayment}
+                    onChange={setDownPayment}
+                    error={fieldErrors.downPayment}
+                  />
+
+                  <div>
+                    <label
+                      htmlFor="loan-duration"
+                      className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted"
+                    >
+                      Loan Duration
+                    </label>
+                    <select
+                      id="loan-duration"
+                      value={durationYears}
+                      onChange={(e) => setDurationYears(Number(e.target.value))}
+                      className="w-full rounded-sm border border-hairline bg-raised px-3 py-2 text-sm text-ink focus:border-amber focus:outline-none"
+                    >
+                      {ALLOWED_LOAN_DURATIONS.map((years) => (
+                        <option key={years} value={years}>
+                          {years} {years === 1 ? "Year" : "Years"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <dl className="space-y-1 border-t border-dashed border-hairline pt-3 font-mono text-xs">
+                    <div className="flex justify-between">
+                      <dt className="text-muted">Loan Amount</dt>
+                      <dd className="text-ink">{formatMoney(loanAmount)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted">Interest Rate</dt>
+                      <dd className="text-ink">{ANNUAL_INTEREST_RATE * 100}%</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted">Estimated EMI</dt>
+                      <dd className="text-ink">{formatMoney(monthlyEmi)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted">Total Interest</dt>
+                      <dd className="text-ink">{formatMoney(totalInterest)}</dd>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold">
+                      <dt className="text-ink">Total Amount Payable</dt>
+                      <dd className="text-amber">{formatMoney(totalPayable)}</dd>
+                    </div>
+                  </dl>
+                </div>
               )}
 
               {error && <p className="font-mono text-xs text-soldout">{error}</p>}
@@ -216,7 +361,11 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
                 disabled={submitting}
                 className="w-full rounded-sm bg-amber px-4 py-2.5 font-body text-sm font-semibold uppercase tracking-wide text-bg transition-colors hover:bg-amber/90 disabled:opacity-60"
               >
-                {submitting ? "Processing…" : "Confirm Purchase"}
+                {submitting
+                  ? "Processing…"
+                  : paymentType === "loan"
+                  ? "Apply for Loan"
+                  : "Confirm Purchase"}
               </button>
             </form>
           </>
@@ -228,7 +377,11 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
               Purchase Successful
             </p>
             <p className="mb-6 font-mono text-xs text-muted">
-              Paid {formatMoney(totals.total)} via {paymentMethodLabel}.
+              {paymentType === "loan"
+                ? `Loan application submitted for ${formatMoney(loanAmount)} over ${durationYears} year${
+                    durationYears === 1 ? "" : "s"
+                  }.`
+                : `Paid ${formatMoney(totals.total)} via ${paymentMethodLabel}.`}
             </p>
             <div className="flex gap-2">
               <button
@@ -254,9 +407,10 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
             vehicle={purchasedVehicle || vehicle}
             customer={{ name: customerName, email: user?.email }}
             totals={totals}
-            paymentMethod={paymentMethodLabel}
+            paymentMethod={paymentType === "loan" ? "Loan" : paymentMethodLabel}
             invoiceNumber={invoiceNumber}
             date={invoiceDate}
+            loan={paymentType === "loan" ? loanResult : undefined}
           />
         )}
 
