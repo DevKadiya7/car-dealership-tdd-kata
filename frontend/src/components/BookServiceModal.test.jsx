@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import BookServiceModal from "./BookServiceModal";
@@ -70,8 +70,7 @@ describe("BookServiceModal", () => {
     await screen.findByLabelText(/vehicle/i);
 
     const dateInput = screen.getByLabelText(/preferred date/i);
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, "01/01/2020");
+    fireEvent.change(dateInput, { target: { value: "2020-01-01" } });
     await userEvent.click(screen.getByRole("button", { name: /book service/i }));
 
     expect(await screen.findByText(/cannot be in the past/i)).toBeInTheDocument();
@@ -94,8 +93,7 @@ describe("BookServiceModal", () => {
     await userEvent.selectOptions(screen.getByLabelText(/vehicle/i), "v2");
     await userEvent.selectOptions(screen.getByLabelText(/service type/i), "brake_service");
     const dateInput = screen.getByLabelText(/preferred date/i);
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, "01/15/2030");
+    fireEvent.change(dateInput, { target: { value: "2030-01-15" } });
     await userEvent.type(screen.getByLabelText(/notes/i), "Squeaky brakes");
     await userEvent.click(screen.getByRole("button", { name: /book service/i }));
 
