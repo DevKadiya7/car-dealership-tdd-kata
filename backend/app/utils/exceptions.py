@@ -23,3 +23,11 @@ class InsufficientStockError(Exception):
 
 class CustomerNotFoundError(Exception):
     """Raised when an admin operation targets a customer ID that doesn't exist."""
+
+
+class AdminNotFoundError(Exception):
+    """Raised when an admin operation targets an admin ID that doesn't exist."""
+
+
+class CannotDeactivateSelfError(Exception):
+    """Raised when an admin tries to deactivate their own account."""

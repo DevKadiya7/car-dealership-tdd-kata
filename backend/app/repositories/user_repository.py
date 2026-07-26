@@ -62,6 +62,9 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
+    def list_by_role(self, role: UserRole) -> list[User]:
+        return self.db.query(User).filter(User.role == role).all()
+
     def list_customers_with_stats(self) -> list[dict]:
         rows = (
             self.db.query(

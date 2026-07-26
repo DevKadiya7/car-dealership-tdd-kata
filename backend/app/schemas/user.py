@@ -1,5 +1,7 @@
 """Request/response schemas for user data."""
+import enum
 import re
+from typing import Optional
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -17,6 +19,18 @@ def validate_password_strength(value: str) -> str:
     return value
 
 
+def validate_not_blank(value: str) -> str:
+    if not value.strip():
+        raise ValueError("This field cannot be blank")
+    return value
+
+
+def validate_mobile_format(value: str) -> str:
+    if not MOBILE_NUMBER_PATTERN.match(value):
+        raise ValueError("Mobile number must be 10-15 digits, with an optional leading +")
+    return value
+
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -24,18 +38,12 @@ class UserCreate(BaseModel):
     last_name: str
     mobile_number: str
     terms_accepted: bool
-    address: str | None = None
-    city: str | None = None
-    state: str | None = None
-    country: str | None = None
-    postal_code: str | None = None
+
 
     @field_validator("first_name", "last_name", "mobile_number")
     @classmethod
     def not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("This field cannot be blank")
-        return value
+        return validate_not_blank(value)
 
     @field_validator("password")
     @classmethod
@@ -45,9 +53,7 @@ class UserCreate(BaseModel):
     @field_validator("mobile_number")
     @classmethod
     def mobile_format(cls, value: str) -> str:
-        if not MOBILE_NUMBER_PATTERN.match(value):
-            raise ValueError("Mobile number must be 10-15 digits, with an optional leading +")
-        return value
+        return validate_mobile_format(value)
 
     @field_validator("terms_accepted")
     @classmethod
@@ -64,11 +70,6 @@ class UserOut(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     mobile_number: str | None = None
-    address: str | None = None
-    city: str | None = None
-    state: str | None = None
-    country: str | None = None
-    postal_code: str | None = None
     avatar_url: str | None = None
     created_at: datetime | None = None
     is_active: bool | None = None
@@ -80,26 +81,17 @@ class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     mobile_number: str | None = None
-    address: str | None = None
-    city: str | None = None
-    state: str | None = None
-    country: str | None = None
-    postal_code: str | None = None
     avatar_url: str | None = None
 
     @field_validator("first_name", "last_name")
     @classmethod
     def not_blank_if_provided(cls, value: str | None) -> str | None:
-        if value is not None and not value.strip():
-            raise ValueError("This field cannot be blank")
-        return value
+        return validate_not_blank(value) if value is not None else value
 
     @field_validator("mobile_number")
     @classmethod
     def mobile_format_if_provided(cls, value: str | None) -> str | None:
-        if value is not None and not MOBILE_NUMBER_PATTERN.match(value):
-            raise ValueError("Mobile number must be 10-15 digits, with an optional leading +")
-        return value
+        return validate_mobile_format(value) if value is not None else value
 
 
 class CustomerOut(BaseModel):
@@ -118,4 +110,41 @@ class CustomerOut(BaseModel):
 
 
 class CustomerStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class AdminCreate(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: str
+    mobile_number: str
+    is_active: bool = True
+
+    @field_validator("first_name", "last_name", "mobile_number")
+    @classmethod
+    def not_blank(cls, value: str) -> str:
+        return validate_not_blank(value)
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
+
+    @field_validator("mobile_number")
+    @classmethod
+    def mobile_format(cls, value: str) -> str:
+        return validate_mobile_format(value)
+
+
+class AdminPasswordReset(BaseModel):
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def new_password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
+
+
+class AdminStatusUpdate(BaseModel):
     is_active: bool
