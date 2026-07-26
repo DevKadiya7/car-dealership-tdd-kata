@@ -61,4 +61,49 @@ describe("useAsyncList", () => {
     expect(result.current.data).toEqual([1, 2]);
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
+
+  it("tracks busyId for the duration of runBusyAction, then clears it", async () => {
+    const fetchFn = vi.fn().mockResolvedValue([{ id: "a", name: "Alice" }]);
+    const { result } = renderHook(() => useAsyncList(fetchFn, "failed"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let resolveAction;
+    const action = () => new Promise((resolve) => { resolveAction = resolve; });
+
+    let runPromise;
+    act(() => {
+      runPromise = result.current.runBusyAction("a", action);
+    });
+    expect(result.current.busyId).toBe("a");
+
+    await act(async () => {
+      resolveAction();
+      await runPromise;
+    });
+    expect(result.current.busyId).toBe(null);
+  });
+
+  it("clears busyId even when the action throws, and lets the error propagate", async () => {
+    const fetchFn = vi.fn().mockResolvedValue([{ id: "a", name: "Alice" }]);
+    const { result } = renderHook(() => useAsyncList(fetchFn, "failed"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await expect(
+      act(() => result.current.runBusyAction("a", () => Promise.reject(new Error("boom"))))
+    ).rejects.toThrow("boom");
+    expect(result.current.busyId).toBe(null);
+  });
+
+  it("returns whatever the wrapped action resolves to", async () => {
+    const fetchFn = vi.fn().mockResolvedValue([{ id: "a", name: "Alice" }]);
+    const { result } = renderHook(() => useAsyncList(fetchFn, "failed"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let returned;
+    await act(async () => {
+      returned = await result.current.runBusyAction("a", () => Promise.resolve({ id: "a", name: "Alicia" }));
+    });
+
+    expect(returned).toEqual({ id: "a", name: "Alicia" });
+  });
 });
