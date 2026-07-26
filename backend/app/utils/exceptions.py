@@ -43,3 +43,12 @@ class DownPaymentExceedsPriceError(Exception):
 
 class LoanNotFoundError(Exception):
     """Raised when a loan operation targets a loan ID that doesn't exist."""
+
+
+class VehicleNotOwnedError(Exception):
+    """Raised when a customer tries to book service for a vehicle they
+    have no purchase record for."""
+
+
+class ServiceBookingNotFoundError(Exception):
+    """Raised when a service booking operation targets an ID that doesn't exist."""

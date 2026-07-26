@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, vehicles, purchase, customers, admin_users, loan
+from app.routers import auth, vehicles, purchase, customers, admin_users, loan, service_bookings
 from app.routers.dashboard import router as dashboard_router
 
 logger = logging.getLogger("uvicorn.error")
@@ -49,6 +49,7 @@ app.include_router(dashboard_router)
 app.include_router(customers.router)
 app.include_router(admin_users.router)
 app.include_router(loan.router)
+app.include_router(service_bookings.router)
 
 
 @app.get("/health")

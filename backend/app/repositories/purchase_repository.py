@@ -56,3 +56,11 @@ class PurchaseRepository:
     def list_all(self):
         purchases = self.db.query(Purchase).all()
         return [self._serialize(purchase) for purchase in purchases]
+
+    def exists_for_customer_and_vehicle(self, user_id: uuid.UUID, vehicle_id: uuid.UUID) -> bool:
+        return (
+            self.db.query(Purchase)
+            .filter(Purchase.user_id == user_id, Purchase.vehicle_id == vehicle_id)
+            .first()
+            is not None
+        )
