@@ -28,11 +28,12 @@ export default function AdminCustomers() {
     loading,
     errorMsg,
     replaceItem: replaceCustomer,
+    busyId,
+    runBusyAction,
   } = useAsyncList(
     listCustomers,
     "Couldn't load customers. Is the backend running?",
   );
-  const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
   const [viewingCustomer, setViewingCustomer] = useState(null);
 
@@ -53,30 +54,23 @@ export default function AdminCustomers() {
     pageItems: pageCustomers,
   } = usePagination(filteredCustomers, PAGE_SIZE, [customers, search]);
 
-  const handleToggleStatus = async (customer) => {
-    setBusyId(customer.id);
-    try {
+  const handleToggleStatus = (customer) =>
+    runBusyAction(customer.id, async () => {
       const updated = await setCustomerStatus(customer.id, !customer.is_active);
       replaceCustomer(updated);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
 
-  const handleDelete = async (customer) => {
+  const handleDelete = (customer) => {
     if (
       !window.confirm(
         `Remove ${customerName(customer)}? This cannot be undone.`,
       )
     )
       return;
-    setBusyId(customer.id);
-    try {
+    return runBusyAction(customer.id, async () => {
       await deleteCustomer(customer.id);
       setCustomers((prev) => prev.filter((c) => c.id !== customer.id));
-    } finally {
-      setBusyId(null);
-    }
+    });
   };
 
   return (

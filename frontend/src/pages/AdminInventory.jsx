@@ -40,8 +40,9 @@ export default function AdminInventory() {
     errorMsg,
     setErrorMsg,
     reload: load,
+    busyId,
+    runBusyAction,
   } = useAsyncList(listVehicles, "Couldn't load the inventory. Is the backend running?");
-  const [busyId, setBusyId] = useState(null);
   const [modalVehicle, setModalVehicle] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortBy, setSortBy] = useState("");
@@ -78,25 +79,18 @@ export default function AdminInventory() {
     setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
   };
 
-  const handleRestock = async (id) => {
-    setBusyId(id);
-    try {
+  const handleRestock = (id) =>
+    runBusyAction(id, async () => {
       const updated = await restockVehicle(id);
       replaceVehicle(updated);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
 
-  const handleDelete = async (vehicle) => {
+  const handleDelete = (vehicle) => {
     if (!window.confirm(`Remove ${vehicle.make} ${vehicle.model}?`)) return;
-    setBusyId(vehicle.id);
-    try {
+    return runBusyAction(vehicle.id, async () => {
       await deleteVehicle(vehicle.id);
       setVehicles((prev) => prev.filter((v) => v.id !== vehicle.id));
-    } finally {
-      setBusyId(null);
-    }
+    });
   };
 
   const handleSave = async (formData) => {

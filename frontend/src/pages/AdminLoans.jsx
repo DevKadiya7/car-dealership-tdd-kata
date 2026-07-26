@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { listAllLoans, setLoanStatus } from "../api/loans";
 import { Th, Td } from "../components/Table";
 import Loader from "../components/Loader";
@@ -12,18 +11,15 @@ export default function AdminLoans() {
     loading,
     errorMsg,
     replaceItem: replaceLoan,
+    busyId,
+    runBusyAction,
   } = useAsyncList(listAllLoans, "Couldn't load loans. Is the backend running?");
-  const [busyId, setBusyId] = useState(null);
 
-  const handleSetStatus = async (loan, status) => {
-    setBusyId(loan.id);
-    try {
+  const handleSetStatus = (loan, status) =>
+    runBusyAction(loan.id, async () => {
       const updated = await setLoanStatus(loan.id, status);
       replaceLoan(updated);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">

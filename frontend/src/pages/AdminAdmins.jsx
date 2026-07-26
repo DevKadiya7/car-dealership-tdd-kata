@@ -30,8 +30,9 @@ export default function AdminAdmins() {
     loading,
     errorMsg,
     replaceItem: replaceAdmin,
+    busyId,
+    runBusyAction,
   } = useAsyncList(listAdmins, "Couldn't load admins. Is the backend running?");
-  const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
@@ -73,15 +74,11 @@ export default function AdminAdmins() {
     setToast("Password reset successfully.");
   };
 
-  const handleToggleStatus = async (admin) => {
-    setBusyId(admin.id);
-    try {
+  const handleToggleStatus = (admin) =>
+    runBusyAction(admin.id, async () => {
       const updated = await setAdminStatus(admin.id, !admin.is_active);
       replaceAdmin(updated);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">

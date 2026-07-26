@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { listAllServiceBookings, setServiceBookingStatus } from "../api/serviceBookings";
 import { Th, Td } from "../components/Table";
 import Loader from "../components/Loader";
@@ -11,18 +10,15 @@ export default function AdminServiceBookings() {
     loading,
     errorMsg,
     replaceItem: replaceBooking,
+    busyId,
+    runBusyAction,
   } = useAsyncList(listAllServiceBookings, "Couldn't load service bookings. Is the backend running?");
-  const [busyId, setBusyId] = useState(null);
 
-  const handleSetStatus = async (booking, status) => {
-    setBusyId(booking.id);
-    try {
+  const handleSetStatus = (booking, status) =>
+    runBusyAction(booking.id, async () => {
       const updated = await setServiceBookingStatus(booking.id, status);
       replaceBooking(updated);
-    } finally {
-      setBusyId(null);
-    }
-  };
+    });
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
