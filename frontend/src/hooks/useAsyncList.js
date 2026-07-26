@@ -26,5 +26,12 @@ export function useAsyncList(fetchFn, errorMessage) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { data, setData, loading, setLoading, errorMsg, setErrorMsg, reload: load };
+  // Merges a partial update into the matching item by id - the same
+  // "replace one row after a PATCH response" logic repeated across every
+  // admin list page (AdminCustomers, AdminAdmins) before this was extracted.
+  const replaceItem = useCallback((updated) => {
+    setData((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+  }, []);
+
+  return { data, setData, loading, setLoading, errorMsg, setErrorMsg, reload: load, replaceItem };
 }

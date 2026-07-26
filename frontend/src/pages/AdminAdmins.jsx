@@ -29,6 +29,7 @@ export default function AdminAdmins() {
     setData: setAdmins,
     loading,
     errorMsg,
+    replaceItem: replaceAdmin,
   } = useAsyncList(listAdmins, "Couldn't load admins. Is the backend running?");
   const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
@@ -51,10 +52,6 @@ export default function AdminAdmins() {
     totalPages,
     pageItems: pageAdmins,
   } = usePagination(filteredAdmins, PAGE_SIZE, [admins, search]);
-
-  const replaceAdmin = (updated) => {
-    setAdmins((prev) => prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)));
-  };
 
   const handleCreate = async (payload) => {
     const created = await createAdmin(payload);

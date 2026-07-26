@@ -1,5 +1,9 @@
 import { useState, useMemo } from "react";
-import { listCustomers, setCustomerStatus, deleteCustomer } from "../api/customers";
+import {
+  listCustomers,
+  setCustomerStatus,
+  deleteCustomer,
+} from "../api/customers";
 import { Th, Td } from "../components/Table";
 import Pagination from "../components/Pagination";
 import Loader from "../components/Loader";
@@ -11,7 +15,10 @@ import { formatMoney } from "../utils/vehicle";
 const PAGE_SIZE = 9;
 
 function customerName(customer) {
-  return [customer.first_name, customer.last_name].filter(Boolean).join(" ") || customer.email;
+  return (
+    [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
+    customer.email
+  );
 }
 
 export default function AdminCustomers() {
@@ -20,7 +27,11 @@ export default function AdminCustomers() {
     setData: setCustomers,
     loading,
     errorMsg,
-  } = useAsyncList(listCustomers, "Couldn't load customers. Is the backend running?");
+    replaceItem: replaceCustomer,
+  } = useAsyncList(
+    listCustomers,
+    "Couldn't load customers. Is the backend running?",
+  );
   const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState("");
   const [viewingCustomer, setViewingCustomer] = useState(null);
@@ -29,18 +40,18 @@ export default function AdminCustomers() {
     const query = search.trim().toLowerCase();
     if (!query) return customers;
     return customers.filter((c) =>
-      [customerName(c), c.email].some((field) => field.toLowerCase().includes(query))
+      [customerName(c), c.email].some((field) =>
+        field.toLowerCase().includes(query),
+      ),
     );
   }, [customers, search]);
 
-  const { page, setPage, totalPages, pageItems: pageCustomers } = usePagination(filteredCustomers, PAGE_SIZE, [
-    customers,
-    search,
-  ]);
-
-  const replaceCustomer = (updated) => {
-    setCustomers((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
-  };
+  const {
+    page,
+    setPage,
+    totalPages,
+    pageItems: pageCustomers,
+  } = usePagination(filteredCustomers, PAGE_SIZE, [customers, search]);
 
   const handleToggleStatus = async (customer) => {
     setBusyId(customer.id);
@@ -53,7 +64,12 @@ export default function AdminCustomers() {
   };
 
   const handleDelete = async (customer) => {
-    if (!window.confirm(`Remove ${customerName(customer)}? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Remove ${customerName(customer)}? This cannot be undone.`,
+      )
+    )
+      return;
     setBusyId(customer.id);
     try {
       await deleteCustomer(customer.id);
@@ -66,7 +82,9 @@ export default function AdminCustomers() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <div className="mb-6">
-        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-amber">Back Office</p>
+        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-amber">
+          Back Office
+        </p>
         <h1 className="font-display text-3xl font-bold uppercase tracking-tight text-ink">
           Customers
         </h1>
@@ -92,7 +110,9 @@ export default function AdminCustomers() {
         <Loader label="Loading customers" />
       ) : filteredCustomers.length === 0 ? (
         <div className="plate p-10 text-center">
-          <p className="font-mono text-sm text-muted">No customers match right now.</p>
+          <p className="font-mono text-sm text-muted">
+            No customers match right now.
+          </p>
         </div>
       ) : (
         <>
@@ -117,13 +137,17 @@ export default function AdminCustomers() {
                         <CustomerAvatar customer={customer} />
                         <div>
                           <p className="text-ink">{customerName(customer)}</p>
-                          <p className="font-mono text-xs text-muted">{customer.email}</p>
+                          <p className="font-mono text-xs text-muted">
+                            {customer.email}
+                          </p>
                         </div>
                       </div>
                     </Td>
                     <Td muted>{customer.mobile_number || "—"}</Td>
                     <Td muted>
-                      {customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "—"}
+                      {customer.created_at
+                        ? new Date(customer.created_at).toLocaleDateString()
+                        : "—"}
                     </Td>
                     <Td align="right">{customer.total_purchases}</Td>
                     <Td align="right">{formatMoney(customer.total_spent)}</Td>
@@ -169,12 +193,19 @@ export default function AdminCustomers() {
             </table>
           </div>
 
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </>
       )}
 
       {viewingCustomer && (
-        <CustomerProfileModal customer={viewingCustomer} onClose={() => setViewingCustomer(null)} />
+        <CustomerProfileModal
+          customer={viewingCustomer}
+          onClose={() => setViewingCustomer(null)}
+        />
       )}
     </div>
   );
@@ -224,11 +255,21 @@ function CustomerProfileModal({ customer, onClose }) {
           <Row label="Mobile" value={customer.mobile_number || "—"} />
           <Row
             label="Registered"
-            value={customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "—"}
+            value={
+              customer.created_at
+                ? new Date(customer.created_at).toLocaleDateString()
+                : "—"
+            }
           />
-          <Row label="Total Purchases" value={String(customer.total_purchases)} />
+          <Row
+            label="Total Purchases"
+            value={String(customer.total_purchases)}
+          />
           <Row label="Total Spent" value={formatMoney(customer.total_spent)} />
-          <Row label="Status" value={customer.is_active ? "Active" : "Disabled"} />
+          <Row
+            label="Status"
+            value={customer.is_active ? "Active" : "Disabled"}
+          />
         </dl>
       </div>
     </Modal>

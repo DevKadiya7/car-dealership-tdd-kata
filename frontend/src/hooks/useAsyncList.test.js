@@ -33,6 +33,23 @@ describe("useAsyncList", () => {
     expect(result.current.data).toEqual([1, 2, 3]);
   });
 
+  it("exposes replaceItem to merge an update into the matching item by id", async () => {
+    const fetchFn = vi.fn().mockResolvedValue([
+      { id: "a", name: "Alice" },
+      { id: "b", name: "Bob" },
+    ]);
+    const { result } = renderHook(() => useAsyncList(fetchFn, "failed"));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => result.current.replaceItem({ id: "b", name: "Bobby" }));
+
+    expect(result.current.data).toEqual([
+      { id: "a", name: "Alice" },
+      { id: "b", name: "Bobby" },
+    ]);
+  });
+
   it("re-fetches when reload is called", async () => {
     const fetchFn = vi.fn().mockResolvedValueOnce([1]).mockResolvedValueOnce([1, 2]);
     const { result } = renderHook(() => useAsyncList(fetchFn, "failed"));
