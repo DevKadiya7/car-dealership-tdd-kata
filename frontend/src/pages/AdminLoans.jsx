@@ -4,13 +4,7 @@ import { Th, Td } from "../components/Table";
 import Loader from "../components/Loader";
 import { useAsyncList } from "../hooks/useAsyncList";
 import { formatMoney } from "../utils/vehicle";
-
-const STATUS_COLORS = {
-  pending: "text-amber",
-  approved: "text-available",
-  rejected: "text-soldout",
-  completed: "text-muted",
-};
+import { LOAN_STATUS_COLORS } from "../utils/loan";
 
 export default function AdminLoans() {
   const {
@@ -82,7 +76,7 @@ export default function AdminLoans() {
                   <Td align="right">
                     <span
                       className={`font-mono text-[11px] uppercase tracking-wide ${
-                        STATUS_COLORS[loan.status] || "text-muted"
+                        LOAN_STATUS_COLORS[loan.status] || "text-muted"
                       }`}
                     >
                       {loan.status}

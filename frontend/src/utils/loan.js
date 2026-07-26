@@ -5,6 +5,16 @@ export const DOWN_PAYMENT_RATE = 0.3;
 export const ANNUAL_INTEREST_RATE = 0.08;
 export const ALLOWED_LOAN_DURATIONS = [1, 2, 3, 4, 5, 6, 7];
 
+// Shared between AdminLoans (admin's view of every application) and
+// MyLoans (a customer's own applications) - both render the same status
+// values, so the color mapping has one home instead of two copies.
+export const LOAN_STATUS_COLORS = {
+  pending: "text-amber",
+  approved: "text-available",
+  rejected: "text-soldout",
+  completed: "text-muted",
+};
+
 function round2(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
