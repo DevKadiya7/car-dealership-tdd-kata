@@ -13,6 +13,8 @@ import AdminInventory from "./pages/AdminInventory";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminAdmins from "./pages/AdminAdmins";
+import AdminLoans from "./pages/AdminLoans";
+import MyLoans from "./pages/MyLoans";
 
 export default function App() {
   return (
@@ -47,6 +49,14 @@ export default function App() {
             }
           />
           <Route
+            path="/my-loans"
+            element={
+              <ProtectedRoute>
+                <MyLoans />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/*"
             element={
               <ProtectedRoute adminOnly>
@@ -59,6 +69,7 @@ export default function App() {
             <Route path="vehicles" element={<AdminInventory />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="purchases" element={<AdminOrders />} />
+            <Route path="loans" element={<AdminLoans />} />
             <Route path="admins" element={<AdminAdmins />} />
             <Route path="settings" element={<Profile />} />
           </Route>

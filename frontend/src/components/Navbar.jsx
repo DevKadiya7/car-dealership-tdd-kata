@@ -11,6 +11,12 @@ function NavLinks({ isAdmin }) {
       >
         Inventory
       </Link>
+      <Link
+        to="/my-loans"
+        className="font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:text-ink"
+      >
+        My Loans
+      </Link>
       {isAdmin && (
         <Link
           to="/admin"
