@@ -15,6 +15,8 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminAdmins from "./pages/AdminAdmins";
 import AdminLoans from "./pages/AdminLoans";
 import MyLoans from "./pages/MyLoans";
+import AdminServiceBookings from "./pages/AdminServiceBookings";
+import MyServices from "./pages/MyServices";
 
 export default function App() {
   return (
@@ -57,6 +59,14 @@ export default function App() {
             }
           />
           <Route
+            path="/my-services"
+            element={
+              <ProtectedRoute>
+                <MyServices />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/*"
             element={
               <ProtectedRoute adminOnly>
@@ -70,6 +80,7 @@ export default function App() {
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="purchases" element={<AdminOrders />} />
             <Route path="loans" element={<AdminLoans />} />
+            <Route path="service-bookings" element={<AdminServiceBookings />} />
             <Route path="admins" element={<AdminAdmins />} />
             <Route path="settings" element={<Profile />} />
           </Route>

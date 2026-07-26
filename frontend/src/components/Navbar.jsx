@@ -17,6 +17,12 @@ function NavLinks({ isAdmin }) {
       >
         My Loans
       </Link>
+      <Link
+        to="/my-services"
+        className="font-mono text-xs uppercase tracking-wide text-muted transition-colors hover:text-ink"
+      >
+        My Services
+      </Link>
       {isAdmin && (
         <Link
           to="/admin"
