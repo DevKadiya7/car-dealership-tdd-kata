@@ -4,6 +4,7 @@ export const PAYMENT_METHOD_LABELS = {
   upi: "UPI",
   netbanking: "Net Banking",
   cash: "Cash (Demo)",
+  loan: "Vehicle Loan",
   unknown: "Unknown",
 };
 
