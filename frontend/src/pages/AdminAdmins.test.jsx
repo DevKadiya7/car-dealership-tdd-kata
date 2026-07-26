@@ -182,7 +182,7 @@ describe("AdminAdmins", () => {
     await screen.findByText(/john@company\.com/i);
 
     await userEvent.click(screen.getByRole("button", { name: /reset password/i }));
-    await userEvent.type(screen.getByLabelText(/new password/i), "NewPass123");
+    await userEvent.type(screen.getByLabelText(/^new password/i), "NewPass123");
     await userEvent.type(screen.getByLabelText(/confirm new password/i), "NewPass123");
 
     const resetButtons = screen.getAllByRole("button", { name: /reset password/i });

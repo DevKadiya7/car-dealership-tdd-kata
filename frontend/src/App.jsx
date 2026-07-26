@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminOrders from "./pages/AdminOrders";
+import AdminAdmins from "./pages/AdminAdmins";
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="vehicles" element={<AdminInventory />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="purchases" element={<AdminOrders />} />
+            <Route path="admins" element={<AdminAdmins />} />
             <Route path="settings" element={<Profile />} />
           </Route>
         </Routes>

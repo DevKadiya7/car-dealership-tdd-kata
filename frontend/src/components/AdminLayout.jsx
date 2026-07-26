@@ -5,6 +5,7 @@ const navItems = [
   { label: "Vehicles", to: "/admin/vehicles" },
   { label: "Purchase History", to: "/admin/purchases" },
   { label: "Customers", to: "/admin/customers" },
+  { label: "Admin Users", to: "/admin/admins" },
   { label: "Settings", to: "/admin/settings" },
 ];
 
