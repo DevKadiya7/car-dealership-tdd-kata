@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 import { listVehicles } from "./api/vehicles";
+import { listAdmins } from "./api/adminUsers";
 
 vi.mock("./api/vehicles", async (importOriginal) => {
   const actual = await importOriginal();
@@ -14,6 +15,8 @@ vi.mock("./api/vehicles", async (importOriginal) => {
     deleteVehicle: vi.fn(),
   };
 });
+
+vi.mock("./api/adminUsers");
 
 describe("App routing", () => {
   it("renders the admin dashboard route for admin users", async () => {
@@ -49,5 +52,17 @@ describe("App routing", () => {
 
     expect(await screen.findByRole("heading", { name: /^Profile$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Change Password/i })).toBeInTheDocument();
+  });
+
+  it("renders the admin user management page at /admin/admins", async () => {
+    listAdmins.mockResolvedValue([]);
+
+    window.history.pushState({}, "Admin Users", "/admin/admins");
+    localStorage.setItem("user", JSON.stringify({ email: "admin@company.com", role: "admin" }));
+    localStorage.setItem("access_token", "fake-token");
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: /Admin Users/i })).toBeInTheDocument();
   });
 });
