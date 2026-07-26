@@ -31,3 +31,15 @@ class AdminNotFoundError(Exception):
 
 class CannotDeactivateSelfError(Exception):
     """Raised when an admin tries to deactivate their own account."""
+
+
+class InsufficientDownPaymentError(Exception):
+    """Raised when a loan's down payment is below the required 30% minimum."""
+
+
+class DownPaymentExceedsPriceError(Exception):
+    """Raised when a loan's down payment is greater than the vehicle price."""
+
+
+class LoanNotFoundError(Exception):
+    """Raised when a loan operation targets a loan ID that doesn't exist."""

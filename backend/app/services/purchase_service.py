@@ -19,6 +19,19 @@ class PurchaseService:
         amount: int = 1,
         payment_method: str | None = None,
     ):
+        purchase = self.create_purchase(user_id, vehicle_id, amount, payment_method)
+        return purchase.vehicle
+
+    def create_purchase(
+        self,
+        user_id: uuid.UUID,
+        vehicle_id: uuid.UUID,
+        amount: int = 1,
+        payment_method: str | None = None,
+    ):
+        """Stock-checks, decrements, and records a purchase. Shared by the
+        full-payment purchase flow and the loan flow (LoanService), so the
+        stock/decrement logic only lives in one place."""
         vehicle = self.vehicle_repository.get_by_id(vehicle_id)
         if vehicle is None:
             raise VehicleNotFoundError(f"Vehicle '{vehicle_id}' not found")
@@ -32,15 +45,13 @@ class PurchaseService:
         vehicle.quantity -= amount
         self.vehicle_repository.update(vehicle, quantity=vehicle.quantity)
 
-        self.purchase_repository.create(
+        return self.purchase_repository.create(
             user_id=user_id,
             vehicle_id=vehicle_id,
             quantity=amount,
             total_price=total_price,
             payment_method=payment_method,
         )
-
-        return vehicle
 
     def list_user_purchases(self, user_id: uuid.UUID):
         return self.purchase_repository.list_by_user(user_id)
