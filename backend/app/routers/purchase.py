@@ -1,7 +1,5 @@
 """Purchase history API endpoints."""
-import uuid
-
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, require_admin
@@ -10,7 +8,6 @@ from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.vehicle_repository import VehicleRepository
 from app.schemas.purchase import PurchaseOut
 from app.services.purchase_service import PurchaseService
-from app.services.vehicle_service import VehicleService
 
 router = APIRouter(prefix="/api/purchases", tags=["purchases"])
 

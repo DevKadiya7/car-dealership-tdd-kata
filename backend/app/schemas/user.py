@@ -1,7 +1,5 @@
 """Request/response schemas for user data."""
-import enum
 import re
-from typing import Optional
 import uuid
 from datetime import datetime
 from decimal import Decimal
