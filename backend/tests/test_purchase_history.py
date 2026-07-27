@@ -65,7 +65,7 @@ def test_purchase_creates_history_record_and_returns_vehicle(client, customer_he
     assert isinstance(history_response.json(), list)
     assert history_response.json()[0]["vehicle_id"] == vehicle["id"]
     assert history_response.json()[0]["quantity"] == 1
-    assert history_response.json()[0]["total_price"] == "22000.00"
+    assert history_response.json()[0]["total_price"] == "19800.00"  # 22000.00 * 0.90
 
 
 def test_get_purchases_me_returns_only_current_user_history(client, customer_headers, admin_headers):
