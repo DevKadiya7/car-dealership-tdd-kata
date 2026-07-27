@@ -111,11 +111,6 @@ cd frontend && npm test
 
 ### 5. Demo accounts
 
-## Live Demo
-
-Experience the application here:
-
-**🌐 Live Application:** http://13.206.80.112:5173/
 
 For reviewers who just want to click around without registering:
 
