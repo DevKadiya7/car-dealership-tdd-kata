@@ -1,10 +1,11 @@
 """Business logic for purchase history."""
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 import uuid
 
 from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.vehicle_repository import VehicleRepository
 from app.utils.exceptions import InsufficientStockError, VehicleNotFoundError
+from app.utils.money import round2
 
 DISCOUNT_RATE = Decimal("0.10")
 
@@ -43,9 +44,7 @@ class PurchaseService:
                 f"Only {vehicle.quantity} unit(s) of vehicle '{vehicle_id}' left in stock"
             )
 
-        total_price = (Decimal(vehicle.price) * amount * (1 - DISCOUNT_RATE)).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
+        total_price = round2(Decimal(vehicle.price) * amount * (1 - DISCOUNT_RATE))
         vehicle.quantity -= amount
         self.vehicle_repository.update(vehicle, quantity=vehicle.quantity)
 
