@@ -101,6 +101,8 @@ describe("Admin dashboard analytics", () => {
   it("loads summary cards", async () => {
     render(<App />);
 
+    expect(await screen.findByText(/promotion active/i)).toBeInTheDocument();
+    expect(screen.getByText(/10% off today/i)).toBeInTheDocument();
     expect(await screen.findByText(/Total Customers/i)).toBeInTheDocument();
     expect(screen.getByText("18")).toBeInTheDocument();
     expect(screen.getByText(/Total Sales/i)).toBeInTheDocument();

@@ -4,9 +4,11 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { vi } from "vitest";
 import VehicleDetail from "./VehicleDetail";
 import { getVehicle, purchaseVehicle } from "../api/vehicles";
+import { listMyPurchases } from "../api/purchases";
 import { useAuth } from "../hooks/useAuth";
 
 vi.mock("../api/vehicles");
+vi.mock("../api/purchases");
 vi.mock("../hooks/useAuth");
 
 const vehicle = {
@@ -37,6 +39,7 @@ describe("VehicleDetail page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuth.mockReturnValue({ user: { first_name: "Jane", last_name: "Doe", email: "jane@example.com" } });
+    listMyPurchases.mockResolvedValue([]);
   });
 
   it("renders vehicle details passed via route state without fetching", () => {
@@ -44,7 +47,10 @@ describe("VehicleDetail page", () => {
 
     expect(screen.getByText(/toyota/i)).toBeInTheDocument();
     expect(screen.getByText(/corolla/i)).toBeInTheDocument();
-    expect(screen.getByText(/22,000/)).toBeInTheDocument();
+    expect(screen.getByText(/today only/i)).toBeInTheDocument();
+    expect(screen.getByText(/10% off/i)).toBeInTheDocument();
+    expect(screen.getByText(/22,000/)).toHaveClass("line-through");
+    expect(screen.getByText(/19,800/)).toBeInTheDocument();
     expect(getVehicle).not.toHaveBeenCalled();
   });
 
@@ -90,6 +96,20 @@ describe("VehicleDetail page", () => {
 
   it("updates the displayed stock after a successful purchase via the modal", async () => {
     purchaseVehicle.mockResolvedValue({ ...vehicle, quantity: 4 });
+    listMyPurchases.mockResolvedValue([
+      {
+        id: "p1",
+        vehicle_id: "v1",
+        vehicle_make: "Toyota",
+        vehicle_model: "Corolla",
+        original_price: "22000.00",
+        discount_amount: "2200.00",
+        total_price: "19800.00",
+        gst: "3564.00",
+        grand_total: "23364.00",
+        purchased_at: "2026-07-27T10:00:00Z",
+      },
+    ]);
 
     renderDetail({ withState: true });
     await userEvent.click(screen.getByRole("button", { name: /purchase/i }));

@@ -3,14 +3,20 @@ import Invoice from "./Invoice";
 
 const vehicle = { id: "v1234567", make: "Toyota", model: "Fortuner" };
 const customer = { name: "Jane Doe", email: "jane.doe@example.com" };
-const totals = { base: 1000000, gst: 180000, total: 1180000 };
+const pricing = {
+  originalPrice: 1000000,
+  discountAmount: 100000,
+  subtotal: 900000,
+  gst: 162000,
+  grandTotal: 1062000,
+};
 
 function renderInvoice(props = {}) {
   render(
     <Invoice
       vehicle={vehicle}
       customer={customer}
-      totals={totals}
+      pricing={pricing}
       paymentMethod="Credit Card"
       invoiceNumber="INV-000001"
       date="26/07/2026"
@@ -26,6 +32,15 @@ describe("Invoice", () => {
     expect(screen.getByText(/payment method/i)).toBeInTheDocument();
     expect(screen.getByText("Credit Card")).toBeInTheDocument();
     expect(screen.queryByText(/loan details/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/original price/i)).toBeInTheDocument();
+    expect(screen.getByText("₹10,00,000.00")).toBeInTheDocument();
+    expect(screen.getByText(/discount/i)).toBeInTheDocument();
+    expect(screen.getByText("-₹1,00,000.00")).toBeInTheDocument();
+    expect(screen.getByText(/subtotal/i)).toBeInTheDocument();
+    expect(screen.getByText("₹9,00,000.00")).toBeInTheDocument();
+    expect(screen.getByText("₹1,62,000.00")).toBeInTheDocument();
+    expect(screen.getByText(/final amount/i)).toBeInTheDocument();
+    expect(screen.getByText("₹10,62,000.00")).toBeInTheDocument();
   });
 
   it("shows a Loan Details section with down payment, loan amount, duration, interest, and EMI", () => {

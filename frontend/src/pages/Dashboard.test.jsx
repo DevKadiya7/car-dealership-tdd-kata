@@ -137,6 +137,8 @@ describe("Dashboard welcome, featured vehicles, and skeleton loading", () => {
 
     expect(await screen.findByRole("heading", { name: /featured vehicles/i })).toBeInTheDocument();
     const featuredSection = screen.getByTestId("featured-vehicles");
+    expect(within(featuredSection).getAllByText(/today only/i)).toHaveLength(2);
+    expect(within(featuredSection).getAllByText(/10% off/i)).toHaveLength(2);
     expect(within(featuredSection).getAllByText(/toyota|ford|porsche/i).length).toBeGreaterThan(0);
   });
 

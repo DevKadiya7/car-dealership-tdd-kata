@@ -11,7 +11,11 @@ const order1 = {
   user_id: "u1",
   vehicle_id: "v1",
   quantity: 1,
-  total_price: "20000.00",
+  original_price: "20000.00",
+  discount_amount: "2000.00",
+  total_price: "18000.00",
+  gst: "3240.00",
+  grand_total: "21240.00",
   purchased_at: "2026-07-10T10:00:00Z",
   payment_method: "upi",
   status: "completed",
@@ -26,7 +30,11 @@ const order2 = {
   user_id: "u2",
   vehicle_id: "v2",
   quantity: 2,
-  total_price: "50000.00",
+  original_price: "50000.00",
+  discount_amount: "5000.00",
+  total_price: "45000.00",
+  gst: "8100.00",
+  grand_total: "53100.00",
   purchased_at: "2026-07-20T10:00:00Z",
   payment_method: "cash",
   status: "pending",
@@ -65,7 +73,7 @@ describe("AdminOrders", () => {
     expect(await screen.findByText(/couldn't load orders/i)).toBeInTheDocument();
   });
 
-  it("lists orders with invoice number, customer, vehicle, payment method, GST, total, and status", async () => {
+  it("lists orders with invoice number, customer, vehicle, payment method, discount, GST, final amount, and status", async () => {
     listAllPurchases.mockResolvedValue([order1]);
 
     render(<AdminOrders />);
@@ -75,8 +83,9 @@ describe("AdminOrders", () => {
     expect(screen.getByText(/jane\.doe@example\.com/i)).toBeInTheDocument();
     expect(screen.getByText(/toyota corolla/i)).toBeInTheDocument();
     expect(within(screen.getByRole("table")).getByText(/^upi$/i)).toBeInTheDocument();
-    expect(screen.getByText(/₹3,600/)).toBeInTheDocument();
-    expect(screen.getByText(/₹23,600/)).toBeInTheDocument();
+    expect(screen.getByText(/₹2,000/)).toBeInTheDocument();
+    expect(screen.getByText(/₹3,240/)).toBeInTheDocument();
+    expect(screen.getByText(/₹21,240/)).toBeInTheDocument();
     expect(within(screen.getByRole("table")).getByText(/^completed$/i)).toBeInTheDocument();
   });
 

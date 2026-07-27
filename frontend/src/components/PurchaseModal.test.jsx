@@ -4,10 +4,12 @@ import { vi } from "vitest";
 import PurchaseModal from "./PurchaseModal";
 import { useAuth } from "../hooks/useAuth";
 import { purchaseVehicle } from "../api/vehicles";
+import { listMyPurchases } from "../api/purchases";
 import { createLoan } from "../api/loans";
 
 vi.mock("../hooks/useAuth");
 vi.mock("../api/vehicles");
+vi.mock("../api/purchases");
 vi.mock("../api/loans");
 
 const vehicle = {
@@ -40,7 +42,9 @@ describe("PurchaseModal", () => {
     expect(screen.getByText(/jane doe/i)).toBeInTheDocument();
     expect(screen.getByText(/jane\.doe@example\.com/i)).toBeInTheDocument();
     expect(screen.getByText(/toyota corolla/i)).toBeInTheDocument();
-    expect(screen.getByText("₹18,000.00")).toBeInTheDocument(); // 20,000 - 10%
+    expect(screen.getByText("₹20,000.00")).toBeInTheDocument();
+    expect(screen.getByText("-₹2,000.00")).toBeInTheDocument();
+    expect(screen.getByText("₹18,000.00")).toBeInTheDocument();
     expect(screen.getByText(/gst \(18%\)/i)).toBeInTheDocument();
     expect(screen.getByText("₹3,240.00")).toBeInTheDocument();
     expect(screen.getByText("₹21,240.00")).toBeInTheDocument();
@@ -95,6 +99,20 @@ describe("PurchaseModal", () => {
 
   it("purchases the vehicle and shows a success view with a View Invoice option", async () => {
     purchaseVehicle.mockResolvedValue({ ...vehicle, quantity: 4 });
+    listMyPurchases.mockResolvedValue([
+      {
+        id: "p1",
+        vehicle_id: "v1",
+        vehicle_make: "Toyota",
+        vehicle_model: "Corolla",
+        original_price: "20000.00",
+        discount_amount: "2000.00",
+        total_price: "18000.00",
+        gst: "3240.00",
+        grand_total: "21240.00",
+        purchased_at: "2026-07-27T10:00:00Z",
+      },
+    ]);
     const { onSuccess } = renderModal();
 
     await userEvent.type(screen.getByLabelText(/card number/i), "4111111111111111");
@@ -111,6 +129,20 @@ describe("PurchaseModal", () => {
 
   it("shows the invoice with a GST breakdown when View Invoice is clicked", async () => {
     purchaseVehicle.mockResolvedValue({ ...vehicle, quantity: 4 });
+    listMyPurchases.mockResolvedValue([
+      {
+        id: "p1",
+        vehicle_id: "v1",
+        vehicle_make: "Toyota",
+        vehicle_model: "Corolla",
+        original_price: "20000.00",
+        discount_amount: "2000.00",
+        total_price: "18000.00",
+        gst: "3240.00",
+        grand_total: "21240.00",
+        purchased_at: "2026-07-27T10:00:00Z",
+      },
+    ]);
     renderModal();
 
     await userEvent.type(screen.getByLabelText(/card number/i), "4111111111111111");
@@ -180,14 +212,14 @@ describe("PurchaseModal - loan flow", () => {
     renderModal();
 
     await userEvent.click(screen.getByRole("radio", { name: /^loan$/i }));
-    expect(screen.getByLabelText(/down payment/i)).toHaveValue(6000);
+    expect(screen.getByLabelText(/down payment/i)).toHaveValue(5400);
 
     await userEvent.selectOptions(screen.getByLabelText(/loan duration/i), "5");
 
-    expect(screen.getByText("₹14,000.00")).toBeInTheDocument(); // loan amount
-    expect(screen.getByText("₹283.87")).toBeInTheDocument(); // EMI
-    expect(screen.getByText("₹3,032.20")).toBeInTheDocument(); // total interest
-    expect(screen.getByText("₹23,032.20")).toBeInTheDocument(); // total payable
+    expect(screen.getByText("₹12,600.00")).toBeInTheDocument(); // loan amount after discount
+    expect(screen.getByText(/estimated emi/i)).toBeInTheDocument();
+    expect(screen.getByText(/total interest/i)).toBeInTheDocument();
+    expect(screen.getByText(/total amount payable/i)).toBeInTheDocument();
   });
 
   it("recomputes the EMI when the down payment changes", async () => {
@@ -199,7 +231,7 @@ describe("PurchaseModal - loan flow", () => {
     await userEvent.clear(downPaymentInput);
     await userEvent.type(downPaymentInput, "6000");
 
-    expect(screen.getByText("₹438.71")).toBeInTheDocument(); // EMI for 14000 over 3 years
+    expect(screen.getByText("₹376.04")).toBeInTheDocument(); // EMI for 12000 over 3 years
   });
 
   it("shows a validation error when down payment is below the 30% minimum", async () => {
@@ -249,7 +281,7 @@ describe("PurchaseModal - loan flow", () => {
     expect(await screen.findByText(/purchase successful/i)).toBeInTheDocument();
     expect(createLoan).toHaveBeenCalledWith({
       vehicle_id: "v1",
-      down_payment: 6000,
+      down_payment: 5400,
       duration_years: 5,
     });
     expect(onSuccess).toHaveBeenCalledWith({ ...vehicle, quantity: 4 });

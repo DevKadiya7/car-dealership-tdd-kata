@@ -5,6 +5,7 @@ import {
   calculateDiscountedPrice,
   calculateGst,
   calculateGrandTotal,
+  calculatePricingBreakdown,
 } from "./pricing";
 
 describe("pricing rates", () => {
@@ -35,5 +36,17 @@ describe("calculateGst", () => {
 describe("calculateGrandTotal", () => {
   it("is amount plus GST", () => {
     expect(calculateGrandTotal("18000.00")).toBe(21240);
+  });
+});
+
+describe("calculatePricingBreakdown", () => {
+  it("returns the original price, 10% discount, subtotal, GST, and grand total", () => {
+    expect(calculatePricingBreakdown("20000.00")).toEqual({
+      originalPrice: 20000,
+      discountAmount: 2000,
+      subtotal: 18000,
+      gst: 3240,
+      grandTotal: 21240,
+    });
   });
 });

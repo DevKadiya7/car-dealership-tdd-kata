@@ -68,7 +68,7 @@ describe("AdminInventory", () => {
     expect(await screen.findByText(/couldn't load the inventory/i)).toBeInTheDocument();
   });
 
-  it("lists all vehicles in a table with make, model, category, price, and stock status", async () => {
+  it("lists all vehicles in a table with original and discounted prices, category, and stock status", async () => {
     listVehicles.mockResolvedValue([healthyVehicle, lowVehicle, soldOutVehicle]);
 
     render(<AdminInventory />);
@@ -76,7 +76,10 @@ describe("AdminInventory", () => {
     expect(await screen.findByText(/Honda Civic/i)).toBeInTheDocument();
     expect(screen.getByText(/Mazda CX-5/i)).toBeInTheDocument();
     expect(screen.getByText(/Nissan Leaf/i)).toBeInTheDocument();
-    expect(screen.getByText(/₹24,000/)).toBeInTheDocument();
+    expect(screen.getByText(/original price/i)).toBeInTheDocument();
+    expect(screen.getByText(/discounted price/i)).toBeInTheDocument();
+    expect(screen.getByText("₹24,000")).toHaveClass("line-through");
+    expect(screen.getByText("₹21,600")).toBeInTheDocument();
     const table = screen.getByRole("table");
     expect(within(table).getByText(/Low Stock/i)).toBeInTheDocument();
     expect(within(table).getByText(/Sold Out/i)).toBeInTheDocument();
