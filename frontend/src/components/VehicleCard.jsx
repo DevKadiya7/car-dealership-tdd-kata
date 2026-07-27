@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
+import { calculateDiscountedPrice } from "../utils/pricing";
 import PurchaseModal from "./PurchaseModal";
 
 export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, onEdit, onDelete }) {
@@ -32,6 +33,15 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
           }`}
         >
           {outOfStock ? "Sold Out" : lowStock ? "Low Stock" : "In Stock"}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between bg-amber/10 px-4 py-1.5">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-amber">
+          🔥 Today Only
+        </span>
+        <span className="rounded-sm bg-amber px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase text-bg">
+          10% OFF
         </span>
       </div>
 
@@ -69,7 +79,12 @@ export default function VehicleCard({ vehicle, isAdmin, onPurchase, onRestock, o
         <dl className="space-y-1.5 border-t border-dashed border-hairline pt-3 font-mono text-sm">
           <div className="flex items-center justify-between">
             <dt className="text-muted">Price</dt>
-            <dd className="text-lg font-semibold text-ink">{formatPrice(vehicle.price)}</dd>
+            <dd className="flex items-baseline gap-2">
+              <span className="text-muted line-through">{formatPrice(vehicle.price)}</span>
+              <span className="text-lg font-semibold text-amber">
+                {formatPrice(calculateDiscountedPrice(vehicle.price))}
+              </span>
+            </dd>
           </div>
           <div className="flex items-center justify-between">
             <dt className="text-muted">In Stock</dt>
