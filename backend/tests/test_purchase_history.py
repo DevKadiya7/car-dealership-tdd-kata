@@ -138,6 +138,20 @@ def test_purchase_with_payment_method_is_stored(client, customer_headers, admin_
     assert record["payment_method"] == "upi"
 
 
+def test_purchase_applies_10_percent_discount_to_total_price(client, customer_headers):
+    vehicle = client.post(
+        "/api/vehicles",
+        json={"make": "Kia", "model": "Seltos", "category": "suv", "price": "20000.00", "quantity": 3},
+        headers=customer_headers,
+    ).json()
+
+    client.post(f"/api/vehicles/{vehicle['id']}/purchase", headers=customer_headers)
+
+    response = client.get("/api/purchases/me", headers=customer_headers)
+    record = next(p for p in response.json() if p["vehicle_id"] == vehicle["id"])
+    assert record["total_price"] == "18000.00"  # 20000.00 * 0.90
+
+
 def test_purchase_without_payment_method_is_recorded_as_unknown(client, customer_headers, admin_headers):
     vehicle = client.post(
         "/api/vehicles",
