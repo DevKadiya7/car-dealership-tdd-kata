@@ -9,9 +9,10 @@ import pytest
 from app.auth.password import hash_password
 from app.models.user import User, UserRole
 
-VEHICLE_PRICE = "1000000.00"
-MIN_DOWN_PAYMENT = "300000.00"
-LOAN_AMOUNT = "700000.00"
+VEHICLE_PRICE = "1000000.00"  # listed price
+DISCOUNTED_PRICE = "900000.00"  # 10% Today Only discount - what loan math is based on
+MIN_DOWN_PAYMENT = "270000.00"  # 30% of the discounted price
+LOAN_AMOUNT = "630000.00"  # discounted price - min down payment
 
 
 @pytest.fixture()
@@ -101,14 +102,14 @@ def test_create_loan_success_returns_pending_loan_with_calculated_fields(
     assert response.status_code == 201
     body = response.json()
     assert body["status"] == "pending"
-    assert body["vehicle_price"] == VEHICLE_PRICE
+    assert body["vehicle_price"] == DISCOUNTED_PRICE
     assert body["down_payment"] == MIN_DOWN_PAYMENT
     assert body["loan_amount"] == LOAN_AMOUNT
     assert body["interest_rate"] == "8.00"
     assert body["duration_years"] == 5
-    assert body["monthly_emi"] == "14193.48"
-    assert body["total_interest"] == "151608.80"
-    assert body["total_payable"] == "1151608.80"
+    assert body["monthly_emi"] == "12774.13"
+    assert body["total_interest"] == "136447.80"
+    assert body["total_payable"] == "1036447.80"
     assert body["vehicle_make"] == "Toyota"
     assert body["vehicle_model"] == "Fortuner"
     assert body["customer_email"] == "customer@example.com"
