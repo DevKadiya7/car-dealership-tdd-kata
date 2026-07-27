@@ -171,6 +171,10 @@ All endpoints except register/login require a `Bearer <token>` JWT. Admin-only e
 ![Customer dashboard](screenshots/customer-dashboard.png)
 The showroom cards now show a "Today Only" badge, original price strikethrough, and discounted price.
 
+**Today Only promotion — 10% off**
+![Today Only promo](screenshots/promo-discount.png)
+This screenshot captures the live 10% discount banner and the discounted card prices.
+
 **Vehicle detail**
 ![Vehicle detail](screenshots/vehicle-detail.png)
 The detail page mirrors the same promotional pricing breakdown.
