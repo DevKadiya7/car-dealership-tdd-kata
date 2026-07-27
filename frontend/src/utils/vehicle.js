@@ -1,3 +1,5 @@
+import { calculatePricingBreakdown } from "./pricing";
+
 export const CATEGORY_LABELS = {
   sedan: "Sedan",
   suv: "SUV",
@@ -30,9 +32,6 @@ export const SORT_OPTIONS = [
   { value: "stock", label: "Stock Availability" },
 ];
 
-export const GST_RATE = 0.18;
-export const DISCOUNT_RATE = 0.10;
-
 export function formatMoney(amount) {
   return Number(amount).toLocaleString("en-IN", {
     style: "currency",
@@ -43,10 +42,8 @@ export function formatMoney(amount) {
 }
 
 export function calculateTotals(price) {
-  const base = Number(price);
-  const gst = Math.round(base * GST_RATE * 100) / 100;
-  const total = Math.round((base + gst) * 100) / 100;
-  return { base, gst, total };
+  const { subtotal, gst, grandTotal } = calculatePricingBreakdown(price);
+  return { base: subtotal, gst, total: grandTotal };
 }
 
 export function sortVehicles(vehicles, sortBy) {

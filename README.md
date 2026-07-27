@@ -26,7 +26,7 @@ Every feature in this repository was built Red → Green → Refactor, with a ma
 
 Ironyard Motors is a two-sided application:
 
-- **Customers** register, log in, browse the vehicle showroom (search/filter/sort/paginate), view a vehicle's detail page, and purchase it through a modal that computes GST live and generates a printable invoice.
+- **Customers** register, log in, browse the vehicle showroom (search/filter/sort/paginate), view a vehicle's detail page, and purchase it through a modal that computes GST live and generates a printable invoice. A site-wide "Today Only" promo applies 10% off before GST so every quoted price, checkout total, loan amount, and invoice stays consistent.
 - **Admins** get a separate `/admin/*` area:The application includes a dedicated **Admin Dashboard** that provides real-time business insights and management tools. After logging in with an administrator account, click the **ADMIN** button in the navigation bar to access the dashboard. A dashboard with live sales analytics (revenue, top sellers, low stock, sales by category, monthly trend, orders by status/payment method), full vehicle inventory CRUD, customer management (search, enable/disable, delete, profile drill-down), and an order management screen with search/filter/sort/pagination that reuses the same invoice component customers see.
 
 Everything is backed by a real PostgreSQL database (via Docker), JWT authentication, and role-based access control (`customer` / `admin`).
@@ -169,26 +169,33 @@ All endpoints except register/login require a `Bearer <token>` JWT. Admin-only e
 
 **Showroom floor — search, filter, sort, pagination**
 ![Customer dashboard](screenshots/customer-dashboard.png)
+The showroom cards now show a "Today Only" badge, original price strikethrough, and discounted price.
 
 **Vehicle detail**
 ![Vehicle detail](screenshots/vehicle-detail.png)
+The detail page mirrors the same promotional pricing breakdown.
 
 **Purchase modal — live GST calculation, payment method**
 ![Purchase modal](screenshots/purchase-modal.png)
+The order summary now shows original price, discount, subtotal, GST, and final amount.
 
 **Purchase confirmation → invoice**
 ![Invoice](screenshots/invoice.png)
+The invoice uses the backend-provided original price, discount, GST, and final amount fields.
 
 ### Admin Experience
 
 **Admin dashboard — analytics**
 ![Admin dashboard](screenshots/admin-dashboard.png)
+The admin dashboard includes a promotion banner while the sale is active.
 
 **Inventory management**
 ![Admin inventory](screenshots/admin-inventory.png)
+Inventory rows now show both original and discounted prices.
 
 **Order management — reuses the customer invoice component**
 ![Admin orders](screenshots/admin-orders.png)
+Admin order rows now surface the backend discount and final amount breakdown instead of recomputing totals.
 
 **Customer management**
 ![Admin customers](screenshots/admin-customers.png)
