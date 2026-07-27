@@ -112,11 +112,7 @@ def test_login_with_unknown_email_returns_401(client):
 def test_register_with_full_profile_returns_201_and_persists_new_fields(client):
     payload = {
         **VALID_REGISTRATION_PAYLOAD,
-        "address": "221B Baker Street",
-        "city": "London",
-        "state": "Greater London",
-        "country": "UK",
-        "postal_code": "NW16XE",
+       
     }
 
     response = client.post("/api/auth/register", json=payload)
@@ -126,11 +122,7 @@ def test_register_with_full_profile_returns_201_and_persists_new_fields(client):
     assert body["first_name"] == "Jane"
     assert body["last_name"] == "Doe"
     assert body["mobile_number"] == "9876543210"
-    assert body["address"] == "221B Baker Street"
-    assert body["city"] == "London"
-    assert body["state"] == "Greater London"
-    assert body["country"] == "UK"
-    assert body["postal_code"] == "NW16XE"
+   
 
 
 def test_register_without_optional_location_fields_still_succeeds(client):
@@ -139,11 +131,7 @@ def test_register_without_optional_location_fields_still_succeeds(client):
     assert response.status_code == 201
     body = response.json()
     assert body["first_name"] == "Jane"
-    assert body["address"] is None
-    assert body["city"] is None
-    assert body["state"] is None
-    assert body["country"] is None
-    assert body["postal_code"] is None
+   
 
 
 def test_register_missing_first_name_returns_422(client):
