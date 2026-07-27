@@ -7,7 +7,7 @@ import Modal from "../components/Modal";
 import Invoice from "../components/Invoice";
 import { useAsyncList } from "../hooks/useAsyncList";
 import { usePagination } from "../hooks/usePagination";
-import { calculateTotals, formatMoney } from "../utils/vehicle";
+import { formatMoney } from "../utils/vehicle";
 import {
   PAYMENT_METHOD_LABELS,
   STATUS_COLORS,
@@ -186,14 +186,17 @@ export default function AdminOrders() {
                   <Th>Date</Th>
                   <Th>Payment</Th>
                   <Th align="right">Qty</Th>
+                  <Th align="right">Discount</Th>
                   <Th align="right">GST</Th>
-                  <Th align="right">Total</Th>
+                  <Th align="right">Final</Th>
                   <Th align="right">Status</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-hairline">
                 {pageOrders.map((order) => {
-                  const totals = calculateTotals(order.total_price);
+                  const discountAmount = Number(order.discount_amount ?? 0);
+                  const gstAmount = Number(order.gst ?? 0);
+                  const finalAmount = Number(order.grand_total ?? order.total_price);
                   return (
                     <tr
                       key={order.id}
@@ -211,8 +214,9 @@ export default function AdminOrders() {
                       <Td muted>{new Date(order.purchased_at).toLocaleDateString()}</Td>
                       <Td muted>{PAYMENT_METHOD_LABELS[order.payment_method] || order.payment_method}</Td>
                       <Td align="right">{order.quantity}</Td>
-                      <Td align="right">{formatMoney(totals.gst)}</Td>
-                      <Td align="right">{formatMoney(totals.total)}</Td>
+                      <Td align="right">{formatMoney(discountAmount)}</Td>
+                      <Td align="right">{formatMoney(gstAmount)}</Td>
+                      <Td align="right">{formatMoney(finalAmount)}</Td>
                       <Td align="right">
                         <span
                           className={`font-mono text-[11px] uppercase tracking-wide ${
@@ -243,7 +247,13 @@ export default function AdminOrders() {
                 model: viewingOrder.vehicle_model,
               }}
               customer={{ name: viewingOrder.customer_name, email: viewingOrder.customer_email }}
-              totals={calculateTotals(viewingOrder.total_price)}
+              pricing={{
+                originalPrice: viewingOrder.original_price,
+                discountAmount: viewingOrder.discount_amount,
+                subtotal: viewingOrder.total_price,
+                gst: viewingOrder.gst,
+                grandTotal: viewingOrder.grand_total,
+              }}
               paymentMethod={PAYMENT_METHOD_LABELS[viewingOrder.payment_method] || viewingOrder.payment_method}
               invoiceNumber={invoiceNumberFor(viewingOrder)}
               date={new Date(viewingOrder.purchased_at).toLocaleDateString()}

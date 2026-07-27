@@ -4,6 +4,7 @@ import { getVehicle } from "../api/vehicles";
 import Loader from "../components/Loader";
 import PurchaseModal from "../components/PurchaseModal";
 import { CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
+import { calculatePricingBreakdown } from "../utils/pricing";
 
 export default function VehicleDetail() {
   const { id } = useParams();
@@ -54,6 +55,7 @@ export default function VehicleDetail() {
 
   const outOfStock = vehicle.quantity === 0;
   const lowStock = vehicle.quantity > 0 && vehicle.quantity <= 2;
+  const pricing = calculatePricingBreakdown(vehicle.price);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
@@ -94,6 +96,15 @@ export default function VehicleDetail() {
             </span>
           </div>
 
+          <div className="mb-4 flex items-center justify-between rounded-sm border border-hairline bg-amber/10 px-3 py-2">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-amber">
+              🔥 Today Only
+            </span>
+            <span className="rounded-sm bg-amber px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-bg">
+              10% OFF
+            </span>
+          </div>
+
           <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight text-ink">
             {vehicle.make}
           </h1>
@@ -103,8 +114,16 @@ export default function VehicleDetail() {
 
           <dl className="mt-6 space-y-2 border-t border-dashed border-hairline pt-4 font-mono text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-muted">Price</dt>
-              <dd className="text-lg font-semibold text-ink">{formatPrice(vehicle.price)}</dd>
+              <dt className="text-muted">Original Price</dt>
+              <dd className="line-through text-ink">{formatPrice(pricing.originalPrice)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Discount</dt>
+              <dd className="text-soldout">-{formatPrice(pricing.discountAmount)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted">Final Price</dt>
+              <dd className="text-lg font-semibold text-amber">{formatPrice(pricing.subtotal)}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-muted">In Stock</dt>

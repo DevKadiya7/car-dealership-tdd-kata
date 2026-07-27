@@ -66,6 +66,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="plate mb-8 flex items-center justify-between gap-4 border border-amber/30 bg-amber/10 px-5 py-4">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-amber">Promotion Active</p>
+          <h2 className="font-display text-xl font-bold uppercase tracking-tight text-ink">
+            10% OFF Today
+          </h2>
+        </div>
+        <div className="rounded-sm bg-amber px-3 py-1.5 font-mono text-xs font-bold uppercase text-bg">
+          🔥 Today Only
+        </div>
+      </div>
+
       {dashboardLoading ? (
         <div className="mb-8">
           <Loader />

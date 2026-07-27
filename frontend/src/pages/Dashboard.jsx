@@ -13,6 +13,7 @@ import VehicleCard from "../components/VehicleCard";
 import VehicleFormModal from "../components/VehicleFormModal";
 import Pagination from "../components/Pagination";
 import { SORT_OPTIONS, sortVehicles, CATEGORY_LABELS, formatPrice } from "../utils/vehicle";
+import { calculatePricingBreakdown } from "../utils/pricing";
 
 const PAGE_SIZE = 9;
 
@@ -241,27 +242,42 @@ function Stat({ label, value, tone = "text-ink" }) {
 }
 
 function FeaturedCard({ vehicle }) {
+  const pricing = calculatePricingBreakdown(vehicle.price);
+
   return (
-    <div className="plate flex items-center gap-3 overflow-hidden p-3 transition-transform hover:-translate-y-0.5">
-      {vehicle.image_url ? (
-        <img
-          src={vehicle.image_url}
-          alt={`${vehicle.make} ${vehicle.model}`}
-          className="h-14 w-20 shrink-0 rounded-sm object-cover"
-        />
-      ) : (
-        <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-sm bg-raised font-mono text-[9px] uppercase text-muted">
-          No Image
+    <div className="plate overflow-hidden transition-transform hover:-translate-y-0.5">
+      <div className="flex items-center justify-between bg-amber/10 px-3 py-1.5">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-amber">
+          🔥 Today Only
+        </span>
+        <span className="rounded-sm bg-amber px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-bg">
+          10% OFF
+        </span>
+      </div>
+      <div className="flex items-center gap-3 p-3">
+        {vehicle.image_url ? (
+          <img
+            src={vehicle.image_url}
+            alt={`${vehicle.make} ${vehicle.model}`}
+            className="h-14 w-20 shrink-0 rounded-sm object-cover"
+          />
+        ) : (
+          <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-sm bg-raised font-mono text-[9px] uppercase text-muted">
+            No Image
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-wide text-amber">
+            {CATEGORY_LABELS[vehicle.category] || vehicle.category}
+          </p>
+          <h4 className="truncate font-display text-lg font-bold uppercase leading-none tracking-tight text-ink">
+            {vehicle.make} {vehicle.model}
+          </h4>
+          <p className="font-mono text-xs text-muted">
+            <span className="mr-2 line-through">{formatPrice(pricing.originalPrice)}</span>
+            <span className="font-semibold text-amber">{formatPrice(pricing.subtotal)}</span>
+          </p>
         </div>
-      )}
-      <div className="min-w-0">
-        <p className="font-mono text-[10px] uppercase tracking-wide text-amber">
-          {CATEGORY_LABELS[vehicle.category] || vehicle.category}
-        </p>
-        <h4 className="truncate font-display text-lg font-bold uppercase leading-none tracking-tight text-ink">
-          {vehicle.make} {vehicle.model}
-        </h4>
-        <p className="font-mono text-xs text-muted">{formatPrice(vehicle.price)}</p>
       </div>
     </div>
   );

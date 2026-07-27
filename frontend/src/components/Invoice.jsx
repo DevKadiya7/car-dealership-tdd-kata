@@ -1,6 +1,12 @@
 import { formatMoney } from "../utils/vehicle";
 
-export default function Invoice({ vehicle, customer, totals, paymentMethod, invoiceNumber, date, loan }) {
+export default function Invoice({ vehicle, customer, pricing, paymentMethod, invoiceNumber, date, loan }) {
+  const originalPrice = Number(pricing?.originalPrice ?? pricing?.original_price ?? vehicle.price ?? 0);
+  const discountAmount = Number(pricing?.discountAmount ?? pricing?.discount_amount ?? 0);
+  const subtotal = Number(pricing?.subtotal ?? pricing?.base ?? originalPrice - discountAmount);
+  const gst = Number(pricing?.gst ?? 0);
+  const grandTotal = Number(pricing?.grandTotal ?? pricing?.grand_total ?? pricing?.total ?? subtotal + gst);
+
   return (
     <div className="plate p-6">
       <div className="mb-6 flex items-start justify-between border-b border-dashed border-hairline pb-4">
@@ -37,16 +43,24 @@ export default function Invoice({ vehicle, customer, totals, paymentMethod, invo
 
       <dl className="space-y-2 border-t border-dashed border-hairline pt-4 font-mono text-sm">
         <div className="flex items-center justify-between">
-          <dt className="text-muted">Price</dt>
-          <dd className="text-ink">{formatMoney(totals.base)}</dd>
+          <dt className="text-muted">Original Price</dt>
+          <dd className="text-ink line-through">{formatMoney(originalPrice)}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-muted">Discount</dt>
+          <dd className="text-soldout">-{formatMoney(discountAmount)}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-muted">Subtotal</dt>
+          <dd className="text-ink">{formatMoney(subtotal)}</dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-muted">GST (18%)</dt>
-          <dd className="text-ink">{formatMoney(totals.gst)}</dd>
+          <dd className="text-ink">{formatMoney(gst)}</dd>
         </div>
         <div className="flex items-center justify-between border-t border-hairline pt-2 text-base">
-          <dt className="font-semibold text-ink">Grand Total</dt>
-          <dd className="font-semibold text-amber">{formatMoney(totals.total)}</dd>
+          <dt className="font-semibold text-ink">Final Amount</dt>
+          <dd className="font-semibold text-amber">{formatMoney(grandTotal)}</dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-muted">Payment Method</dt>

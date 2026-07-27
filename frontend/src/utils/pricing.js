@@ -23,3 +23,19 @@ export function calculateGst(amount) {
 export function calculateGrandTotal(amount) {
   return round2(Number(amount) + calculateGst(amount));
 }
+
+export function calculatePricingBreakdown(price) {
+  const originalPrice = round2(Number(price));
+  const discountAmount = calculateDiscountAmount(originalPrice);
+  const subtotal = calculateDiscountedPrice(originalPrice);
+  const gst = calculateGst(subtotal);
+  const grandTotal = calculateGrandTotal(subtotal);
+
+  return {
+    originalPrice,
+    discountAmount,
+    subtotal,
+    gst,
+    grandTotal,
+  };
+}

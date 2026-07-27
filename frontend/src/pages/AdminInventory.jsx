@@ -15,6 +15,7 @@ import { Th, Td } from "../components/Table";
 import { useAsyncList } from "../hooks/useAsyncList";
 import { usePagination } from "../hooks/usePagination";
 import { CATEGORY_LABELS, formatPrice, SORT_OPTIONS, sortVehicles } from "../utils/vehicle";
+import { calculatePricingBreakdown } from "../utils/pricing";
 
 const PAGE_SIZE = 8;
 
@@ -187,7 +188,8 @@ export default function AdminInventory() {
                   <Th>Image</Th>
                   <Th>Vehicle</Th>
                   <Th>Category</Th>
-                  <Th align="right">Price</Th>
+                  <Th align="right">Original Price</Th>
+                  <Th align="right">Discounted Price</Th>
                   <Th align="right">Stock</Th>
                   <Th align="right">Status</Th>
                   <Th align="right">Actions</Th>
@@ -195,6 +197,7 @@ export default function AdminInventory() {
               </thead>
               <tbody className="divide-y divide-hairline">
                 {pageVehicles.map((vehicle) => {
+                  const pricing = calculatePricingBreakdown(vehicle.price);
                   const outOfStock = vehicle.quantity === 0;
                   const lowStock = vehicle.quantity > 0 && vehicle.quantity <= 2;
                   return (
@@ -206,7 +209,12 @@ export default function AdminInventory() {
                         {vehicle.make} {vehicle.model}
                       </Td>
                       <Td muted>{CATEGORY_LABELS[vehicle.category] || vehicle.category}</Td>
-                      <Td align="right">{formatPrice(vehicle.price)}</Td>
+                      <Td align="right" muted>
+                        <span className="line-through">{formatPrice(pricing.originalPrice)}</span>
+                      </Td>
+                      <Td align="right">
+                        <span className="font-semibold text-amber">{formatPrice(pricing.subtotal)}</span>
+                      </Td>
                       <Td align="right">{vehicle.quantity}</Td>
                       <Td align="right">
                         <span

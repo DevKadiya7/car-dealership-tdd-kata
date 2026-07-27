@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { purchaseVehicle } from "../api/vehicles";
+import { listMyPurchases } from "../api/purchases";
 import { createLoan } from "../api/loans";
-import { formatMoney, calculateTotals, DISCOUNT_RATE } from "../utils/vehicle";
+import { formatMoney } from "../utils/vehicle";
 import {
   ALLOWED_LOAN_DURATIONS,
   ANNUAL_INTEREST_RATE,
@@ -12,6 +13,7 @@ import {
   calculateMonthlyEMI,
   calculateTotalPayable,
 } from "../utils/loan";
+import { calculatePricingBreakdown } from "../utils/pricing";
 import Invoice from "./Invoice";
 import Modal from "./Modal";
 
@@ -43,7 +45,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const [cvv, setCvv] = useState("");
   const [upiId, setUpiId] = useState("");
   const [downPayment, setDownPayment] = useState(() =>
-    String(calculateMinimumDownPayment(vehicle.price))
+    String(calculateMinimumDownPayment(calculatePricingBreakdown(vehicle.price).subtotal))
   );
   const [durationYears, setDurationYears] = useState(5);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -51,11 +53,13 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [purchasedVehicle, setPurchasedVehicle] = useState(null);
   const [loanResult, setLoanResult] = useState(null);
+  const [purchaseRecord, setPurchaseRecord] = useState(null);
 
-  const totals = calculateTotals(Number(vehicle.price) * (1 - DISCOUNT_RATE));
+  const pricing = calculatePricingBreakdown(vehicle.price);
+  const salePrice = pricing.subtotal;
   const customerName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email;
 
-  const vehiclePrice = Number(vehicle.price);
+  const vehiclePrice = salePrice;
   const minimumDownPayment = calculateMinimumDownPayment(vehiclePrice);
   const downPaymentNumber = Number(downPayment) || 0;
   const loanAmount = calculateLoanAmount(vehiclePrice, downPaymentNumber);
@@ -119,11 +123,17 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
         const updated = { ...vehicle, quantity: vehicle.quantity - 1 };
         setLoanResult(created);
         setPurchasedVehicle(updated);
+        setPurchaseRecord(null);
         setStep("success");
         onSuccess(updated);
       } else {
         const updated = await purchaseVehicle(vehicle.id, paymentMethod);
+        const purchases = await listMyPurchases();
+        const latestPurchase = purchases
+          .filter((purchase) => purchase.vehicle_id === vehicle.id)
+          .sort((a, b) => new Date(b.purchased_at) - new Date(a.purchased_at))[0];
         setPurchasedVehicle(updated);
+        setPurchaseRecord(latestPurchase || null);
         setStep("success");
         onSuccess(updated);
       }
@@ -142,6 +152,15 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
 
   const invoiceNumber = `INV-${vehicle.id.slice(0, 6).toUpperCase()}-${Date.now().toString().slice(-6)}`;
   const invoiceDate = new Date().toLocaleDateString();
+  const invoicePricing = purchaseRecord
+    ? {
+        originalPrice: Number(purchaseRecord.original_price ?? pricing.originalPrice),
+        discountAmount: Number(purchaseRecord.discount_amount ?? pricing.discountAmount),
+        subtotal: Number(purchaseRecord.total_price ?? pricing.subtotal),
+        gst: Number(purchaseRecord.gst ?? pricing.gst),
+        grandTotal: Number(purchaseRecord.grand_total ?? pricing.grandTotal),
+      }
+    : pricing;
 
   return (
     <Modal onClose={onClose}>
@@ -173,20 +192,26 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
                   {vehicle.make} {vehicle.model}
                 </p>
               </div>
-              <dl className="space-y-1 border-t border-dashed border-hairline pt-3">
-                <div className="flex justify-between">
-                  <dt className="text-muted">Price</dt>
-                  <dd className="text-ink">{formatMoney(totals.base)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted">GST (18%)</dt>
-                  <dd className="text-ink">{formatMoney(totals.gst)}</dd>
-                </div>
-                <div className="flex justify-between text-sm font-semibold">
-                  <dt className="text-ink">Grand Total</dt>
-                  <dd className="text-amber">{formatMoney(totals.total)}</dd>
-                </div>
-              </dl>
+              <div className="flex items-center justify-between border-t border-dashed border-hairline pt-3">
+                <span className="font-mono uppercase tracking-wide text-muted">Vehicle Price</span>
+                <span className="text-ink line-through">{formatMoney(pricing.originalPrice)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-mono uppercase tracking-wide text-muted">10% Discount</span>
+                <span className="text-soldout">-{formatMoney(pricing.discountAmount)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-mono uppercase tracking-wide text-muted">Subtotal</span>
+                <span className="text-ink">{formatMoney(pricing.subtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-mono uppercase tracking-wide text-muted">GST (18%)</span>
+                <span className="text-ink">{formatMoney(pricing.gst)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span className="text-ink">Grand Total</span>
+                <span className="text-amber">{formatMoney(pricing.grandTotal)}</span>
+              </div>
             </div>
 
             <form onSubmit={handleConfirm} noValidate className="space-y-4">
@@ -381,7 +406,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
                 ? `Loan application submitted for ${formatMoney(loanAmount)} over ${durationYears} year${
                     durationYears === 1 ? "" : "s"
                   }.`
-                : `Paid ${formatMoney(totals.total)} via ${paymentMethodLabel}.`}
+                : `Paid ${formatMoney(invoicePricing.grandTotal)} via ${paymentMethodLabel}.`}
             </p>
             <div className="flex gap-2">
               <button
@@ -406,7 +431,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
           <Invoice
             vehicle={purchasedVehicle || vehicle}
             customer={{ name: customerName, email: user?.email }}
-            totals={totals}
+            pricing={invoicePricing}
             paymentMethod={paymentType === "loan" ? "Loan" : paymentMethodLabel}
             invoiceNumber={invoiceNumber}
             date={invoiceDate}
