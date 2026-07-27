@@ -50,4 +50,13 @@ describe("VehicleCard", () => {
       "/vehicles/v1"
     );
   });
+
+  it("shows the Today Only badge, the original price struck through, and the discounted price", () => {
+    renderCard({ ...baseVehicle, image_url: null });
+
+    expect(screen.getByText(/today only/i)).toBeInTheDocument();
+    expect(screen.getByText(/10% off/i)).toBeInTheDocument();
+    expect(screen.getByText("₹22,000")).toHaveClass("line-through");
+    expect(screen.getByText("₹19,800")).toBeInTheDocument();
+  });
 });
