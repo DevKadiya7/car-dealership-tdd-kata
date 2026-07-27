@@ -16,6 +16,11 @@ class Purchase(Base):
     vehicle_id = Column(GUID(), ForeignKey("vehicles.id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False)
     total_price = Column(Numeric(10, 2), nullable=False)
+    # Vehicle's per-unit price at the moment of purchase, before the Today
+    # Only 10% discount - captured historically so invoices/receipts stay
+    # accurate even if the vehicle's catalog price changes later. Nullable
+    # since purchases made before this column existed won't have it.
+    unit_price = Column(Numeric(10, 2), nullable=True)
     purchased_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Admin order-management fields, added in Phase 4. total_price stays

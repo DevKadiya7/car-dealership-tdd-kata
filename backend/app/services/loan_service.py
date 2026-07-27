@@ -22,6 +22,7 @@ from app.utils.loan import (
     calculate_total_interest,
     calculate_total_payable,
 )
+from app.utils.pricing import calculate_discounted_price
 
 INTEREST_RATE_PERCENT = ANNUAL_INTEREST_RATE * 100
 
@@ -48,7 +49,10 @@ class LoanService:
         if vehicle is None:
             raise VehicleNotFoundError(f"Vehicle '{vehicle_id}' not found")
 
-        price = Decimal(vehicle.price)
+        # Loans are financed off the Today Only discounted price, not the
+        # vehicle's listed price - matches what a full-payment purchase of
+        # the same vehicle would actually cost.
+        price = calculate_discounted_price(vehicle.price)
         minimum_down_payment = calculate_minimum_down_payment(price)
         if down_payment < minimum_down_payment:
             raise InsufficientDownPaymentError(

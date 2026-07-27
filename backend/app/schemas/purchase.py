@@ -15,7 +15,12 @@ class PurchaseOut(BaseModel):
     user_id: uuid.UUID
     vehicle_id: uuid.UUID
     quantity: int
+    unit_price: Decimal | None = None
+    original_price: Decimal | None = None
+    discount_amount: Decimal | None = None
     total_price: Decimal
+    gst: Decimal
+    grand_total: Decimal
     purchased_at: datetime
     payment_method: str
     status: str

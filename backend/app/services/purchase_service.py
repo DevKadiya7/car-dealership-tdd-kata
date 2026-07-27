@@ -6,8 +6,7 @@ from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.vehicle_repository import VehicleRepository
 from app.utils.exceptions import InsufficientStockError, VehicleNotFoundError
 from app.utils.money import round2
-
-DISCOUNT_RATE = Decimal("0.10")
+from app.utils.pricing import DISCOUNT_RATE
 
 
 class PurchaseService:
@@ -44,7 +43,8 @@ class PurchaseService:
                 f"Only {vehicle.quantity} unit(s) of vehicle '{vehicle_id}' left in stock"
             )
 
-        total_price = round2(Decimal(vehicle.price) * amount * (1 - DISCOUNT_RATE))
+        unit_price = Decimal(vehicle.price)
+        total_price = round2(unit_price * amount * (1 - DISCOUNT_RATE))
         vehicle.quantity -= amount
         self.vehicle_repository.update(vehicle, quantity=vehicle.quantity)
 
@@ -54,6 +54,7 @@ class PurchaseService:
             quantity=amount,
             total_price=total_price,
             payment_method=payment_method,
+            unit_price=unit_price,
         )
 
     def list_user_purchases(self, user_id: uuid.UUID):
