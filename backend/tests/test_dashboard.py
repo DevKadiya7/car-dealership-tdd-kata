@@ -80,7 +80,7 @@ def test_admin_can_view_dashboard_summary(client, customer_headers, admin_header
     assert body["total_stock"] == 20
     assert body["total_customers"] == 2
     assert body["total_sales"] == 2
-    assert body["total_revenue"] == "60000.00"
+    assert body["total_revenue"] == "54000.00"  # 30000.00 * 2 * 0.90
     assert body["low_stock_count"] == 3
 
 
@@ -100,7 +100,7 @@ def test_admin_can_view_recent_purchases(client, customer_headers, admin_headers
     assert purchases[0]["vehicle_model"] == "Altima"
     assert purchases[0]["customer_email"] == "customer@example.com"
     assert purchases[0]["quantity"] == 1
-    assert purchases[0]["price"] == "25000.00"
+    assert purchases[0]["price"] == "22500.00"  # 25000.00 * 0.90
     assert "purchase_date" in purchases[0]
 
 
@@ -119,7 +119,7 @@ def test_admin_can_view_top_selling_vehicles(client, customer_headers, admin_hea
     assert vehicles[0]["make"] == "Toyota"
     assert vehicles[0]["model"] == "Camry"
     assert vehicles[0]["units_sold"] == 2
-    assert vehicles[0]["revenue"] == "48000.00"
+    assert vehicles[0]["revenue"] == "43200.00"  # 24000.00 * 2 * 0.90
 
 
 def test_admin_can_view_low_stock(client, admin_headers):
@@ -164,9 +164,9 @@ def test_admin_can_view_sales_by_category(client, customer_headers, admin_header
 
     categories = {item["category"]: item for item in response.json()}
     assert categories["SUV"]["units_sold"] == 2
-    assert categories["SUV"]["revenue"] == "70000.00"
+    assert categories["SUV"]["revenue"] == "63000.00"  # 35000.00 * 2 * 0.90
     assert categories["Sedan"]["units_sold"] == 1
-    assert categories["Sedan"]["revenue"] == "26000.00"
+    assert categories["Sedan"]["revenue"] == "23400.00"  # 26000.00 * 0.90
 
 
 def test_admin_can_view_orders_by_status(client, customer_headers, admin_headers):
@@ -224,4 +224,4 @@ def test_admin_can_view_monthly_sales(client, customer_headers, admin_headers):
 
     current_month = datetime.now().strftime("%B")
     current_month_row = next(item for item in monthly_sales if item["month"] == current_month)
-    assert current_month_row["revenue"] == "84000.00"
+    assert current_month_row["revenue"] == "75600.00"  # 42000.00 * 2 * 0.90
