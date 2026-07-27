@@ -31,6 +31,7 @@ export const SORT_OPTIONS = [
 ];
 
 export const GST_RATE = 0.18;
+export const DISCOUNT_RATE = 0.10;
 
 export function formatMoney(amount) {
   return Number(amount).toLocaleString("en-IN", {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { purchaseVehicle } from "../api/vehicles";
 import { createLoan } from "../api/loans";
-import { formatMoney, calculateTotals } from "../utils/vehicle";
+import { formatMoney, calculateTotals, DISCOUNT_RATE } from "../utils/vehicle";
 import {
   ALLOWED_LOAN_DURATIONS,
   ANNUAL_INTEREST_RATE,
@@ -52,7 +52,7 @@ export default function PurchaseModal({ vehicle, onClose, onSuccess }) {
   const [purchasedVehicle, setPurchasedVehicle] = useState(null);
   const [loanResult, setLoanResult] = useState(null);
 
-  const totals = calculateTotals(vehicle.price);
+  const totals = calculateTotals(Number(vehicle.price) * (1 - DISCOUNT_RATE));
   const customerName = [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email;
 
   const vehiclePrice = Number(vehicle.price);
